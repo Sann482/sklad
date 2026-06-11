@@ -1,0 +1,12 @@
+{
+  "name": "Складський облік",
+  "short_name": "Склад",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#2563eb",
+  "icons": [
+    {"src": "icon-sklad-180.png", "sizes": "180x180", "type": "image/png"},
+    {"src": "icon-sklad-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}
