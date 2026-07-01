@@ -1,0 +1,1914 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Склад волокна</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-sklad-180.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--line:#e2e8f0;--txt:#1e293b;--mut:#64748b;--acc:#7c3aed;--grn:#16a34a;--red:#dc2626;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;}
+body{background:var(--bg);color:var(--txt);padding:16px;}
+h1{font-size:22px;margin-bottom:4px;}
+.sub{color:var(--mut);font-size:13px;margin-bottom:14px;}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+.tab{padding:9px 18px;border:1px solid var(--line);background:var(--card);border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;color:var(--mut);}
+.tab.act{background:var(--acc);color:#fff;border-color:var(--acc);}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px;}
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th{background:#f1f5f9;text-align:left;padding:7px 9px;border-bottom:2px solid var(--line);white-space:nowrap;position:sticky;top:0;}
+td{padding:6px 9px;border-bottom:1px solid var(--line);overflow:hidden;text-overflow:ellipsis;}
+tr:hover td{background:#f8fafc;}
+.num{text-align:right;font-variant-numeric:tabular-nums;}
+.grand td{background:#ede9fe;font-weight:700;}
+label{display:block;font-size:12.5px;font-weight:600;color:var(--mut);margin-bottom:3px;}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:14px;background:#fff;}
+input:focus,select:focus,textarea:focus{outline:2px solid #ddd6fe;border-color:var(--acc);}
+.row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+.row>div{flex:1;min-width:120px;}
+.btn{padding:10px 22px;border:none;border-radius:8px;font-size:14.5px;font-weight:700;cursor:pointer;color:#fff;background:var(--acc);}
+.btn.grn{background:var(--grn);} .btn.red{background:var(--red);}
+.btn.sm{padding:5px 12px;font-size:12.5px;font-weight:600;}
+.btn.ghost{background:#fff;color:var(--txt);border:1px solid var(--line);}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.chip{padding:6px 14px;border:1px solid var(--line);border-radius:20px;background:#fff;cursor:pointer;font-size:13px;}
+.chip.act{background:var(--acc);color:#fff;border-color:var(--acc);}
+.badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:12px;font-weight:700;}
+.b-in{background:#dcfce7;color:#166534;} .b-out{background:#fee2e2;color:#991b1b;} .b-adj{background:#fef3c7;color:#92400e;}
+.msg{padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:14px;display:none;}
+.msg.ok{background:#dcfce7;color:#166534;display:block;}
+.msg.err{background:#fee2e2;color:#991b1b;display:block;}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 18px;flex:1;min-width:150px;}
+.stat .v{font-size:20px;font-weight:800;} .stat .l{font-size:12px;color:var(--mut);}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;}
+.tools{display:flex;gap:8px;flex-wrap:wrap;}
+.scroll{max-height:65vh;overflow:auto;}
+.del{color:var(--red);cursor:pointer;font-weight:700;border:none;background:none;font-size:15px;}
+.zero td{color:#94a3b8;}
+th.srt{cursor:pointer;user-select:none;position:relative;}
+th.srt:hover{background:#e2e8f0;}
+th.drag-over{background:#ddd6fe!important;}
+.rsz{position:absolute;top:0;right:-4px;width:9px;height:100%;cursor:col-resize;z-index:5;}
+.rsz:hover{background:#c4b5fd;}
+.relwrap{position:relative;display:inline-block;}
+.colmenu{position:absolute;right:0;top:110%;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 14px;box-shadow:0 4px 14px rgba(0,0,0,.15);z-index:50;display:none;min-width:190px;}
+.colmenu label{display:flex;gap:8px;align-items:center;font-size:13px;margin:6px 0;color:var(--txt);font-weight:500;cursor:pointer;}
+.colmenu input{width:auto;}
+.banner{background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.balebox{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;}
+.bale{border:1px solid var(--line);border-radius:8px;padding:7px 12px;background:#fff;cursor:pointer;font-size:13.5px;user-select:none;}
+.bale.sel{background:var(--acc);color:#fff;border-color:var(--acc);font-weight:700;}
+.balelist{color:var(--mut);font-size:12.5px;}
+.extcell{cursor:pointer;white-space:nowrap;} .extcell:hover{color:var(--acc);} .extadd{color:#94a3b8;}
+.nmlink{color:var(--txt);cursor:pointer;font-weight:700;border-bottom:1px dotted var(--mut);} .nmlink:hover{color:var(--acc);border-bottom-color:var(--acc);} .ntag{font-size:11px;}
+input[type=color]{height:42px;padding:3px;cursor:pointer;}
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:16px;overflow:auto;}
+.modal-box{background:#fff;border-radius:12px;max-width:640px;width:100%;padding:18px;margin:24px 0;box-shadow:0 12px 44px rgba(0,0,0,.28);}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.modal-head b{font-size:17px;}
+.mclose{border:none;background:none;font-size:20px;cursor:pointer;color:var(--mut);line-height:1;}
+.sugg{margin-bottom:6px;}
+.sug{padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;margin-bottom:4px;cursor:pointer;font-size:14px;}
+.sug:hover{background:#f5f3ff;border-color:var(--acc);}
+.sug.act{background:#ede9fe!important;border-color:var(--acc)!important;}
+.sub2{color:var(--mut);font-size:12.5px;}
+.bline{background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:7px 10px;margin-top:6px;font-size:13.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.bline .del{margin-left:auto;}
+.bline.btot{background:#ede9fe;font-weight:700;}
+.zB td{background:#eef2f7;}
+.pie{width:170px;height:170px;border-radius:50%;flex:0 0 auto;border:1px solid var(--line);}
+.dot{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:7px;flex:0 0 auto;}
+.pleg{display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:5px;}
+.pleg-l{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dw{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px;}
+.dw h4{font-size:13.5px;margin-bottom:10px;color:var(--mut);}
+.hb{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:13px;}
+.hb-l{width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hb-t{flex:1;background:#eef2f7;border-radius:6px;height:16px;overflow:hidden;}
+.hb-f{height:100%;background:var(--acc);border-radius:6px;}
+.hb-v{width:92px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
+.cols{display:flex;align-items:flex-end;gap:2px;height:110px;margin-top:6px;}
+.col{flex:1;background:var(--red);border-radius:3px 3px 0 0;min-height:2px;}
+.col.colin{background:var(--grn);}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;}
+@media(max-width:700px){.hb-l{width:110px;}.hb-v{width:74px;font-size:12px;}}
+@media(max-width:700px){
+ body{padding:8px;}
+ h1{font-size:18px;}
+ .tools .btn{padding:6px 9px;font-size:12px;}
+ .tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;}
+ .tab{padding:8px 13px;font-size:13px;flex:0 0 auto;}
+ .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+ .stat{min-width:0;padding:10px 12px;}
+ .stat .v{font-size:17px;}
+ input,select,textarea{font-size:16px;}
+ .hint{display:none;}
+ .ssr{flex:1 1 100%;}
+ .row>div{flex:1 1 100%;min-width:100%;}
+ input,select,textarea{font-size:17px;}
+ #stockSearch,#inExistSearch,#outItemSearch,#revSearch,#logSearch{font-size:18px;padding:14px 14px;border-width:2px;}
+ .sug{padding:12px 14px;font-size:15px;}
+ .scroll{max-height:none;-webkit-overflow-scrolling:touch;}
+ #logTable{min-width:760px;}
+ td,th{padding:5px 6px;font-size:12.5px;}
+}
+.mcard{background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:7px;}
+.mcard.zero2{opacity:.55;}
+.mc1{font-size:14.5px;margin-bottom:3px;}
+.mc2{font-size:13px;color:var(--mut);}
+.mc2 b{color:var(--txt);font-size:14px;}
+.msec{background:#e0e7ff;border-radius:8px;padding:7px 12px;font-weight:700;font-size:13px;margin:10px 0 7px;}
+.msec2{background:#fee2e2;}
+.mtot{padding:6px 12px;font-weight:700;font-size:13px;color:var(--mut);}
+.grandm{background:#dbeafe;border-radius:8px;color:var(--txt);margin-top:6px;padding:9px 12px;}
+</style>
+</head>
+<body>
+<div class="hdr">
+<div><h1 style="cursor:pointer" title="На головну (Склад)" onclick="showTab('stock')">🧵 Склад волокна</h1><div class="sub">Потюковий облік (кожен тюк зі своєю вагою) · <span id="storageInfo">сховище: браузер</span></div></div>
+<div class="tools">
+<a class="btn ghost sm" href="./" style="text-decoration:none">⌂ Меню</a>
+<button class="btn ghost sm" onclick="openUI()">🎨 Вигляд</button>
+<button class="btn ghost sm" onclick="tgSend(event)" title="Shift+клік — налаштування">📲 Telegram</button>
+<button class="btn ghost sm" onclick="exportXLSX()">⬇ Експорт Excel</button>
+<button class="btn ghost sm" onclick="backup()">💾 Резервна копія</button>
+<button class="btn ghost sm" onclick="document.getElementById('restoreFile').click()">📂 Відновити</button>
+<input type="file" id="restoreFile" accept=".json" style="display:none" onchange="restore(this)">
+</div>
+</div>
+
+<div class="tabs">
+<button class="tab act" data-t="stock" onclick="showTab('stock')">Склад</button>
+<button class="tab" data-t="in" onclick="showTab('in')">➕ Прихід</button>
+<button class="tab" data-t="out" onclick="showTab('out')">➖ Списання</button>
+<button class="tab" data-t="log" onclick="showTab('log')">Журнал</button>
+<button class="tab" data-t="rep" onclick="showTab('rep')">Звіти</button>
+<button class="tab" data-t="dash" onclick="showTab('dash')">📊 Дашборд</button>
+<button class="tab" data-t="rev" onclick="showTab('rev')">📋 Ревізія</button>
+<button class="tab" data-t="extf" onclick="showTab('extf')">📦 Склад Ф</button>
+</div>
+
+<!-- СКЛАД -->
+<div id="tab-stock">
+<div class="stats" id="stockStats"></div>
+<div class="card">
+<div class="row" style="margin-bottom:8px;align-items:center">
+<div class="ssr" style="flex:2"><input id="stockSearch" placeholder="Пошук: Бік, Вєтнам, 15HC ..." oninput="renderStock()"></div>
+<div><label style="display:inline"><input type="checkbox" id="hideZero" style="width:auto" onchange="renderStock()" checked> приховати нульові</label></div>
+<div><label style="display:inline"><input type="checkbox" id="hideZeroMain" style="width:auto" onchange="renderStock()"> приховати 0 на поточному складі</label></div>
+<div style="flex:0;min-width:auto"><button class="btn sm" onclick="openNewCard()">➕ Нова позиція</button></div>
+<div style="flex:0;min-width:auto"><button class="btn ghost sm" onclick="dlStock()">⬇ Excel</button></div>
+<div class="relwrap" style="flex:0;min-width:auto">
+<button class="btn ghost sm" onclick="toggleColMenu()">⚙ Колонки</button>
+<div class="colmenu" id="colMenu"></div>
+</div>
+</div>
+<div class="scroll"><table id="stockTable"></table></div>
+<div id="stockCards"></div>
+<div class="sub hint" style="margin-top:6px">Клік по заголовку — сортування · перетягніть заголовок — змінити порядок · потягніть за правий край заголовка — змінити ширину</div>
+</div>
+</div>
+
+<!-- ПРИХІД -->
+<div id="tab-in" style="display:none">
+<div class="card">
+<h3 style="margin-bottom:12px">➕ Прихід волокна</h3>
+<div class="msg" id="inMsg"></div>
+<div class="row">
+<div style="flex:2"><label>Існуюча позиція (необов'язково)</label><input id="inExistSearch" placeholder="🔍 Пошук: 15HC Вєтнам... (↓↑ і Enter)" oninput="inSuggest()" onkeydown="sugKey(event,'in')" autocomplete="off" style="margin-bottom:6px"><div class="sugg" id="inSugg"></div><select id="inExist" onchange="fillFromExist()"><option value="">— нова позиція —</option></select></div>
+</div>
+<div class="row">
+<div><label>Назва волокна</label><input id="inName" placeholder="Бік (Elit) / 15HC ..."></div>
+<div><label>Країна походження</label><input id="inCountry" placeholder="Китай / Вєтнам / —"></div>
+</div>
+<div class="row">
+<div style="flex:2"><label>Ваги тюків, кг (через пробіл або кому)</label><textarea id="inWeights" rows="2" placeholder="287 287 289 320..."></textarea></div>
+</div>
+<div class="sub" style="margin-bottom:8px">або однакові тюки:</div>
+<div class="row">
+<div><label>Кількість тюків</label><input id="inQty" type="number" min="1" placeholder="15" onkeydown="if(event.key==='Enter'){event.preventDefault();addInLine();}"></div>
+<div><label>Вага 1 тюка, кг</label><input id="inOneKg" type="number" step="0.1" placeholder="320" onkeydown="if(event.key==='Enter'){event.preventDefault();addInLine();}"></div>
+<div><label>Дата</label><input id="inDate" type="date"></div>
+<div style="flex:2"><label>Коментар</label><input id="inComment" placeholder="постачальник, накладна..."></div>
+</div>
+<div class="sub" id="inCalc"></div>
+<div id="inBatchBox" style="margin-bottom:10px"></div>
+<button class="btn ghost" onclick="addInLine()" style="margin-right:8px">➕ Додати до списку</button>
+<button class="btn grn" onclick="doIn()">Оприбуткувати</button>
+</div>
+</div>
+
+<!-- СПИСАННЯ -->
+<div id="tab-out" style="display:none">
+<div class="card">
+<h3 style="margin-bottom:12px">➖ Списання (відвантаження)</h3>
+<div class="msg" id="outMsg"></div>
+<div class="row">
+<div style="flex:3"><label>Позиція (тільки з залишком)</label><input id="outItemSearch" placeholder="🔍 Пошук: 15HC Вєтнам... (↓↑ і Enter)" oninput="outSuggest()" onkeydown="sugKey(event,'out')" autocomplete="off" style="margin-bottom:6px"><div class="sugg" id="outSugg"></div><select id="outItem" onchange="renderBales()"></select></div>
+</div>
+<div><label>Оберіть тюки, які списуються (клік по тюку):</label></div>
+<div class="balebox" id="baleBox"></div>
+<div class="row">
+<div style="flex:0"><button class="btn ghost sm" onclick="selectAllBales()">Вибрати всі</button></div>
+<div class="sub" id="outCalc" style="margin:auto 0"></div>
+</div>
+<div class="row">
+<div><label>Дата</label><input id="outDate" type="date"></div>
+<div style="flex:2"><label>Клієнт</label><input id="outClient" placeholder="кому відвантажено"></div>
+<div style="flex:2"><label>Коментар</label><input id="outComment"></div>
+</div>
+<div id="outBatchBox" style="margin-bottom:10px"></div>
+<button class="btn ghost" onclick="addOutLine()" style="margin-right:8px">➕ Додати до списку</button>
+<button class="btn red" onclick="doOut()">Списати все</button>
+</div>
+</div>
+
+<!-- ЖУРНАЛ -->
+<div id="tab-log" style="display:none">
+<div class="card">
+<div class="row">
+<div><label>З дати</label><input type="date" id="logFrom" onchange="renderLog()"></div>
+<div><label>По дату</label><input type="date" id="logTo" onchange="renderLog()"></div>
+<div><label>Тип</label><select id="logType" onchange="renderLog()"><option value="">Всі операції</option><option value="in">Прихід</option><option value="out">Списання</option></select></div>
+<div style="flex:2"><label>Пошук</label><input id="logSearch" placeholder="волокно, клієнт..." oninput="renderLog()"></div>
+<div style="flex:0;align-self:flex-end"><button class="btn ghost sm" onclick="dlLog()">⬇ Excel</button></div>
+</div>
+<div class="sub" id="logTotals"></div>
+<div class="scroll"><table id="logTable"></table></div>
+</div>
+</div>
+
+<!-- ЗВІТ -->
+<div id="tab-rep" style="display:none">
+<div class="card">
+<h3 style="margin-bottom:10px">Звіт по списанню</h3>
+<div class="chips">
+<button class="chip act" onclick="repQuick('today',this)">Сьогодні</button>
+<button class="chip" onclick="repQuick('yest',this)">Вчора</button>
+<button class="chip" onclick="repQuick('week',this)">7 днів</button>
+<button class="chip" onclick="repQuick('month',this)">Місяць</button>
+</div>
+<div class="row">
+<div><label>З дати</label><input type="date" id="repFrom" onchange="renderRep()"></div>
+<div><label>По дату</label><input type="date" id="repTo" onchange="renderRep()"></div>
+</div>
+<button class="btn ghost sm" id="dlToggle" onclick="toggleDl()">📥 Скачати звіти ▾</button>
+<div id="dlBox" style="display:none;margin-top:10px;border-top:1px solid var(--line);padding-top:10px">
+<div class="row" style="align-items:flex-end">
+<div style="flex:0"><button class="btn ghost sm" onclick="dlMove()">⬇ Рух за період (Excel)</button></div>
+<div style="flex:0"><button class="btn ghost sm" onclick="dlClients()">⬇ Списання по клієнтах (Excel)</button></div>
+<div style="flex:0;min-width:170px"><label>Залишки станом на</label><input type="date" id="snapDate"></div>
+<div style="flex:0"><button class="btn ghost sm" onclick="dlSnapshot()">⬇ Залишки на дату (Excel)</button></div>
+</div>
+<div class="sub">«Рух» і «По клієнтах» враховують вибраний період · журнал з фільтрами скачується на вкладці «Журнал»</div>
+</div>
+<div id="repBody"></div>
+</div>
+</div>
+
+<!-- ДАШБОРД -->
+<div id="tab-dash" style="display:none">
+<div class="card">
+<button class="btn ghost sm" id="dashCtlT" onclick="toggleDashCtl()">⚙ Налаштування ▾</button>
+<div id="dashCtl" style="display:none;margin-top:10px;border-top:1px solid var(--line);padding-top:10px">
+<div class="row" style="align-items:flex-end;margin-bottom:4px">
+<div style="flex:0;min-width:auto"><label>Період</label><div class="chips" id="dashChips" style="margin:0">
+<button class="chip" data-p="7" onclick="setDashP(7,this)">7 днів</button>
+<button class="chip act" data-p="30" onclick="setDashP(30,this)">30 днів</button>
+<button class="chip" data-p="90" onclick="setDashP(90,this)">90 днів</button>
+<button class="chip" data-p="365" onclick="setDashP(365,this)">Рік</button>
+</div></div>
+<div style="flex:0;min-width:145px"><label>З дати</label><input type="date" id="dashFrom" onchange="setDashDates()"></div>
+<div style="flex:0;min-width:145px"><label>По дату</label><input type="date" id="dashTo" onchange="setDashDates()"></div>
+<div style="flex:0;min-width:auto"><label>Одиниці</label><div class="chips" id="dashUnits" style="margin:0">
+<button class="chip act" data-u="kg" onclick="setDashU('kg',this)">кг</button>
+<button class="chip" data-u="cnt" onclick="setDashU('cnt',this)">тюки</button>
+</div></div>
+<div style="flex:0;min-width:auto"><label>Склад</label><div class="chips" id="dashScope" style="margin:0">
+<button class="chip act" data-s="main" onclick="setDashScope('main',this)">Тут</button>
+<button class="chip" data-s="ext" onclick="setDashScope('ext',this)">Склад Ф</button>
+<button class="chip" data-s="both" onclick="setDashScope('both',this)">Разом</button>
+</div></div>
+<div style="flex:0;min-width:auto;margin-left:auto;display:flex;gap:8px">
+<button class="btn ghost sm" onclick="dlDash()">⬇ Excel</button>
+<div class="relwrap" style="min-width:auto">
+<button class="btn ghost sm" onclick="toggleDashMenu()">⚙ Віджети</button>
+<div class="colmenu" id="dashMenu"></div>
+</div>
+</div>
+</div>
+</div>
+<div id="dashBody"></div>
+</div>
+</div>
+
+<!-- РЕВІЗІЯ -->
+<div id="tab-rev" style="display:none">
+<div class="card">
+<h3 style="margin-bottom:12px">📋 Ревізія — вирівнювання залишків</h3>
+<div class="msg" id="revMsg"></div>
+<div class="row">
+<div><label>Позиція</label><input id="revSearch" placeholder="🔍 Пошук: 15HC Вєтнам... (↓↑ і Enter)" oninput="revSuggest()" onkeydown="sugKeyRev(event)" autocomplete="off" style="margin-bottom:6px"><div class="sugg" id="revSugg"></div><select id="revItem" onchange="revInfoUpd()"></select></div>
+</div>
+<div class="row">
+<div style="flex:2"><label>Фактичні ваги тюків, кг (через пробіл; порожньо = 0 тюків)</label><textarea id="revWeights" rows="2" placeholder="287 287 289..."></textarea></div>
+</div>
+<div class="row">
+<div style="flex:0;min-width:160px"><label>Дата</label><input id="revDate" type="date"></div>
+<div style="flex:2"><label>Коментар</label><input id="revComment" placeholder="інвентаризація, причина розбіжності..."></div>
+</div>
+<div class="sub" id="revInfoLine"></div>
+<div id="revBatchBox" style="margin-bottom:10px"></div>
+<button class="btn ghost" onclick="addRevLine()" style="margin-right:8px">➕ Додати до списку</button>
+<button class="btn" onclick="doRev()">Вирівняти все</button>
+<div class="sub" style="margin-top:8px">Старий список тюків заміниться на фактичний; у журналі буде пара операцій «Ревізія −/+»</div>
+</div>
+</div>
+
+<!-- СКЛАД Ф -->
+<div id="tab-extf" style="display:none">
+<div class="card">
+<h3 style="margin-bottom:8px">📦 Склад Ф — звірка залишків</h3>
+<div class="sub" style="margin-bottom:12px">Оновлюйте залишки Складу Ф раз на місяць: завантажте файл Excel або введіть вручну. Кожна зміна записується в історію.</div>
+<div class="msg" id="extfMsg"></div>
+<div class="row" style="align-items:flex-end">
+<div style="flex:0;min-width:160px"><label>Дата звірки</label><input type="date" id="extfDate"></div>
+<div style="flex:2"><label>Коментар (необов'язково)</label><input id="extfComment" placeholder="місячна звірка..."></div>
+</div>
+<div class="row">
+<div style="flex:0"><button class="btn" onclick="document.getElementById('extfImpFile').click()">📥 Завантажити з Excel</button><input type="file" id="extfImpFile" accept=".xlsx,.xls" style="display:none" onchange="extfImport(this)"></div>
+<div style="flex:0"><button class="btn ghost" onclick="toggleExtfManual()" id="extfManBtn">✍️ Ручна звірка залишків</button></div>
+<div style="flex:0"><button class="btn ghost sm" onclick="dlExtf()">⬇ Excel (історія)</button></div>
+</div>
+<div id="extfManual" style="display:none;border-top:1px solid var(--line);margin-top:8px;padding-top:12px">
+<div class="row" style="margin-bottom:8px"><div style="flex:2"><input id="extfSearch" placeholder="🔍 Пошук позиції..." oninput="renderExtfList()"></div></div>
+<div class="scroll"><div id="extfList"></div></div>
+<button class="btn grn" style="margin-top:10px" onclick="saveExtf()">💾 Зберегти зміни Складу Ф</button>
+</div>
+<div id="extfHist"></div>
+</div>
+</div>
+
+
+<script>
+const INITIAL = [{"name":"Бік (Elit)","country":"Китай","bales":[320,320,320,320,320,320,320,320,320,320,320,320,320,320,320]},{"name":"Бік (Huvis)","country":"Корея","bales":[320,320,320,320,320,320,320,320]},{"name":"7 НС","country":"Вєтнам","bales":[]},{"name":"15HC","country":"Вєтнам","bales":[287,287,287,289,289,287,288,287,286]},{"name":"15HC","country":"Єгипет","bales":[251,220]},{"name":"7НСS","country":"Вєтнам","bales":[296,294,291,292,293]},{"name":"15НСS","country":"Вєтнам","bales":[295]},{"name":"15НСS","country":"Єгипет","bales":[261,240,261,284,258]},{"name":"15/64 Solid","country":"","bales":[]},{"name":"6/64 Solid","country":"","bales":[250,250,250,250,250,250]}];
+const CLOUD_PATH='volokno';
+const LS_KEY='voloknoSklad_v1';
+let DB;
+
+function pad2(n){return (n<10?'0':'')+n;}
+function ldate(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+function lstamp(d){return ldate(d)+'T'+pad2(d.getHours())+':'+pad2(d.getMinutes())+':'+pad2(d.getSeconds());}
+function today(){return ldate(new Date());}
+function newId(){DB.nextId=Math.max((DB.nextId||0)+1,Date.now());return DB.nextId;}
+function keyOf(it){return (it.name||'').trim().toLowerCase()+'|'+(it.country||'').trim().toLowerCase();}
+function nameOf(it){return it.name+(it.country?' ('+it.country+')':'');}
+function kgOf(it){return +it.bales.reduce((s,b)=>s+b,0).toFixed(1);}
+function extOf(it){return +(it.ext||0);}
+function escAttr(s){return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+function editExt(k){
+  const it=DB.items[k];if(!it)return;
+  const v=prompt('Скільки кг «'+nameOf(it)+'» лежить на Складі Ф?',extOf(it)||'');
+  if(v===null)return;
+  const n=parseFloat(String(v).replace(',','.'));
+  if(isNaN(n)||n<0){alert('Введіть число (кг), наприклад 1500');return;}
+  setExtVal(k,n,today(),'');
+  save();renderStock();
+}
+function fmt(n){return (+n).toLocaleString('uk-UA');}
+
+function load(){
+  try{DB=JSON.parse(localStorage.getItem(LS_KEY));}catch(e){DB=null;}
+  if(!DB||!DB.items){
+    DB={items:{},ops:[],seeded:today()};
+    INITIAL.forEach(it=>{DB.items[keyOf(it)]={name:it.name,country:it.country,bales:it.bales.slice()};});
+    save();
+  }
+}
+function save(){
+  localStorage.setItem(LS_KEY,JSON.stringify(DB));
+  srvPush();
+}
+
+/* ---------- ЗБЕРЕЖЕННЯ У ФАЙЛ НА ДИСКУ ---------- */
+let fileHandle=null,pendingHandle=null;
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open('voloknoFS',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+async function idbSet(k,v){const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error);});}
+async function idbGet(k){const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('kv');const q=t.objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);});}
+async function writeFile(){
+  if(!fileHandle)return;
+  try{const w=await fileHandle.createWritable();await w.write(JSON.stringify(DB));await w.close();}
+  catch(e){alert('⚠ Не вдалося записати у файл даних: '+e.message+'\nЗробіть «Резервна копія», щоб не втратити дані.');}
+}
+function updateStorageInfo(){}
+const JSON_TYPE=[{description:'Дані складу волокна',accept:{'application/json':['.json']}}];
+async function connectDataFile(){
+  if(!window.showSaveFilePicker){alert('Ваш браузер не підтримує збереження у файл — потрібен Chrome або Edge.\nНаразі дані зберігаються у браузері. Регулярно робіть «Резервна копія».');return;}
+  try{
+    let h;
+    if(confirm('OK — створити НОВИЙ файл даних.\nСкасувати — відкрити ВЖЕ ІСНУЮЧИЙ файл даних.')){
+      h=await showSaveFilePicker({suggestedName:'volokno-dani.json',types:JSON_TYPE});
+      fileHandle=h;await writeFile();
+    }else{
+      [h]=await showOpenFilePicker({types:JSON_TYPE});
+      fileHandle=h;
+      try{const d=JSON.parse(await (await h.getFile()).text());if(d&&d.items)DB=d;else await writeFile();}
+      catch(e){await writeFile();}
+    }
+    await idbSet('handle',h);
+    localStorage.removeItem(LS_KEY);
+    updateStorageInfo();showTab('stock');
+    alert('✔ Дані тепер зберігаються у файлі «'+h.name+'» на вашому диску, а не в браузері.\nКожна операція записується автоматично.');
+  }catch(e){/* скасовано */}
+}
+async function useHandle(h){
+  fileHandle=h;
+  try{const d=JSON.parse(await (await h.getFile()).text());if(d&&d.items)DB=d;}catch(e){}
+  localStorage.removeItem(LS_KEY);
+  document.getElementById('fileBanner').style.display='none';
+  updateStorageInfo();renderStock();
+}
+async function reopenFile(){
+  if(!pendingHandle)return;
+  try{
+    const p=await pendingHandle.requestPermission({mode:'readwrite'});
+    if(p==='granted')await useHandle(pendingHandle);
+  }catch(e){}
+}
+async function initStorage(){
+  try{
+    const h=await idbGet('handle');
+    if(h&&h.queryPermission){
+      if(await h.queryPermission({mode:'readwrite'})==='granted')await useHandle(h);
+      else{pendingHandle=h;document.getElementById('fileBanner').style.display='flex';}
+    }
+  }catch(e){}
+  updateStorageInfo();
+}
+
+
+/* ---------- ХМАРНА СИНХРОНІЗАЦІЯ ---------- */
+const CL_KEY=LS_KEY+'_cloud';
+let CL=null;try{CL=JSON.parse(localStorage.getItem(CL_KEY));}catch(e){}
+let cloudStatus='';
+function cloudEp(){return CL.url+'/'+encodeURIComponent(CLOUD_PATH+'-'+CL.key)+'.json';}
+function setCloudStatus(s){cloudStatus=s;updateStorageInfo();}
+async function cloudPut(){
+  if(!CL)return;
+  try{
+    const r=await fetch(cloudEp(),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(DB)});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    setCloudStatus('синхронізовано '+new Date().toTimeString().slice(0,5));
+  }catch(e){setCloudStatus('⚠ НЕ синхронізовано — перевірте інтернет');}
+}
+async function cloudLoad(silent){
+  if(!CL)return;
+  try{
+    const r=await fetch(cloudEp());
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    if(d&&d.items){DB=d;afterCloudLoad();}
+    setCloudStatus('синхронізовано '+new Date().toTimeString().slice(0,5));
+  }catch(e){
+    setCloudStatus('⚠ офлайн — показано локальну копію');
+    if(!silent)alert('Хмара недоступна: '+e.message);
+  }
+}
+function afterCloudLoad(){
+  localStorage.setItem(LS_KEY,JSON.stringify(DB));
+  renderStock();
+}
+async function cloudSetup(){
+  if(CL&&confirm('Хмарна синхронізація вже увімкнена.\nOK — змінити налаштування.\nСкасувати — ВИМКНУТИ хмару на цьому пристрої.')===false){
+    localStorage.removeItem(CL_KEY);CL=null;updateStorageInfo();
+    alert('Хмарну синхронізацію вимкнено. Дані залишилися у хмарі та локально.');
+    return;
+  }
+  let url=prompt('Крок 1/2. Вставте адресу бази Firebase (Database URL),\nнаприклад: https://mijsklad-default-rtdb.europe-west1.firebasedatabase.app',(CL&&CL.url)||'');
+  if(url===null)return;
+  url=url.trim().replace(/\/+$/,'');
+  if(!url.startsWith('http')){alert('Це не схоже на адресу. Вона має починатися з https://');return;}
+  let key=prompt('Крок 2/2. Придумайте секретний ключ (довге слово/фраза).\nНа ВСІХ пристроях вводьте однаковий ключ — це ваш пароль до даних.',(CL&&CL.key)||'');
+  if(key===null)return;
+  key=key.trim();
+  if(key.length<4){alert('Ключ закороткий — потрібно мінімум 4 символи.');return;}
+  CL={url,key};
+  try{
+    const r=await fetch(cloudEp());
+    if(!r.ok)throw new Error('HTTP '+r.status+' — перевірте адресу і правила доступу бази');
+    const d=await r.json();
+    if(d&&d.items){
+      if(confirm('У хмарі ВЖЕ Є дані ('+Object.keys(d.items).length+' позицій).\nOK — завантажити хмарні дані на цей пристрій.\nСкасувати — ЗАМІНИТИ хмарні дані локальними.')){DB=d;afterCloudLoad();}
+      else await cloudPut();
+    }else await cloudPut();
+    localStorage.setItem(CL_KEY,JSON.stringify(CL));
+    updateStorageInfo();renderStock();
+    alert('✔ Хмару підключено! Тепер усі пристрої з цією адресою і ключем бачать одні й ті самі залишки.');
+  }catch(e){CL=null;alert('Не вдалося підключитися: '+e.message);}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CL)cloudLoad(true);});
+
+
+/* ---------- TELEGRAM ---------- */
+const TG_KEY=LS_KEY+'_tg';
+let TG=null;try{TG=JSON.parse(localStorage.getItem(TG_KEY));}catch(e){}
+async function tgSetup(){
+  if(TG&&!confirm('Telegram вже підключено ('+(TG.name||TG.chat)+').\nOK — змінити налаштування.\nСкасувати — вимкнути надсилання.')){
+    localStorage.removeItem(TG_KEY);TG=null;alert('Telegram вимкнено.');return;
+  }
+  let token=prompt('Крок 1/2. Вставте токен бота.\n(У Telegram знайдіть @BotFather → /newbot → отримаєте токен виду 1234567:AAH...)',(TG&&TG.token)||'');
+  if(token===null)return;token=token.trim();
+  if(!/^\d+:[A-Za-z0-9_-]+$/.test(token)){alert('Це не схоже на токен бота.');return;}
+  alert('Крок 2/2. Відкрийте Telegram, знайдіть СВОГО бота за назвою і надішліть йому будь-яке повідомлення (наприклад «привіт»).\nПісля цього натисніть OK.');
+  try{
+    const r=await fetch('https://api.telegram.org/bot'+token+'/getUpdates');
+    const d=await r.json();
+    if(!d.ok)throw new Error(d.description||'невірний токен');
+    const m=(d.result||[]).reverse().find(u=>u.message&&u.message.chat);
+    if(!m){alert('Бот ще не отримав повідомлень. Напишіть йому в Telegram і спробуйте ще раз.');return;}
+    TG={token,chat:m.message.chat.id,name:m.message.chat.first_name||''};
+    localStorage.setItem(TG_KEY,JSON.stringify(TG));
+    alert('✔ Підключено чат «'+(TG.name||TG.chat)+'». Тепер кнопка «📲 Telegram» надсилає залишки одним кліком.');
+  }catch(e){alert('Помилка: '+e.message);}
+}
+async function tgSend(ev){
+  if(ev&&ev.shiftKey){tgSetup();return;}
+  if(!TG){await tgSetup();if(!TG)return;}
+  const base='https://api.telegram.org/bot'+TG.token;
+  try{
+    const r=await fetch(base+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TG.chat,text:tgSummary()})});
+    const d=await r.json();if(!d.ok)throw new Error(d.description);
+    if(typeof XLSX!=='undefined'){
+      const buf=XLSX.write(buildWB(),{bookType:'xlsx',type:'array'});
+      const fd=new FormData();
+      fd.append('chat_id',TG.chat);
+      fd.append('document',new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),'Залишки_волокно_'+today()+'.xlsx');
+      await fetch(base+'/sendDocument',{method:'POST',body:fd});
+    }
+    alert('✔ Залишки надіслано в Telegram');
+  }catch(e){alert('Не вдалося надіслати: '+e.message+'\n(Shift+клік по кнопці — переналаштувати бота)');}
+}
+function tgSummary(){
+  let tc=0,tk=0,txt='🧵 ВОЛОКНО — залишки на '+today()+'\n\n';
+  itemsSorted().forEach(it=>{
+    if(!it.bales.length)return;
+    const k=kgOf(it);tc+=it.bales.length;tk+=k;
+    txt+=nameOf(it)+': '+it.bales.length+' тюк. · '+fmt(k)+' кг\n';
+  });
+  txt+='\nВСЬОГО: '+fmt(tc)+' тюків · '+fmt(Math.round(tk))+' кг';
+  txt+='\nПовна таблиця — у файлі нижче 👇';
+  return txt.slice(0,4000);
+}
+const SRV_STORE='volokno';
+
+/* ---------- СЕРВЕР ---------- */
+let REV=0;
+function setSrvStatus(s){const el=document.getElementById('storageInfo');if(el)el.innerHTML='🌐 '+s;}
+async function srvPull(silent){
+  try{
+    const r=await fetch('api/'+SRV_STORE);
+    if(r.status===401){location.href='login';return;}
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    if(j&&j.data&&j.data.items){
+      DB=j.data;REV=j.rev;
+      localStorage.setItem(LS_KEY,JSON.stringify(DB));
+      renderStock();
+    }else{
+      REV=(j&&j.rev)||0;
+      await srvPushNow();
+    }
+    setSrvStatus('синхронізовано '+new Date().toTimeString().slice(0,5));
+  }catch(e){setSrvStatus('⚠ офлайн — показано локальну копію');}
+}
+async function srvPushNow(){
+  const r=await fetch('api/'+SRV_STORE,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({rev:REV,data:DB})});
+  if(r.status===401){location.href='login';return;}
+  if(r.status===409){
+    const j=await r.json();
+    if(!j.data){REV=j.rev||0;return srvPushNow();}
+    DB=j.data;REV=j.rev;
+    renderStock();
+    alert('Дані щойно оновили з іншого пристрою — екран синхронізовано. Повторіть вашу останню операцію.');
+    return;
+  }
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const j=await r.json();REV=j.rev;
+  setSrvStatus('синхронізовано '+new Date().toTimeString().slice(0,5));
+}
+function srvPush(){srvPushNow().catch(e=>setSrvStatus('⚠ НЕ збережено на сервер — перевірте інтернет!'));}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')srvPull(true);});
+setInterval(()=>{if(document.visibilityState==='visible')srvPull(true);},60000);
+
+/* ---------- TABS ---------- */
+function showTab(t){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('act',b.dataset.t===t));
+  ['stock','in','out','log','rep','dash','rev','extf'].forEach(x=>document.getElementById('tab-'+x).style.display=x===t?'':'none');
+  if(t==='stock')renderStock();
+  if(t==='in')prepIn();
+  if(t==='out')prepOut();
+  if(t==='log')renderLog();
+  if(t==='rep')renderRep();
+  if(t==='dash')renderDash();
+  if(t==='rev')prepRev();
+  if(t==='extf')prepExtf();
+}
+
+/* ---------- СКЛАД: колонки, сортування, ширина, приховування ---------- */
+function balesStr(it){
+  const s=it.bales.join(', ');
+  return s.length>70?s.slice(0,70)+'…':(s||'—');
+}
+
+
+/* ---------- ВИГЛЯД (кольори/шрифти) ---------- */
+const UI_KEY=LS_KEY+'_ui';
+const DEF_ACC='#7c3aed';
+let UI={};
+try{UI=JSON.parse(localStorage.getItem(UI_KEY))||{};}catch(e){UI={};}
+function applyUI(){
+  const r=document.documentElement.style;
+  r.setProperty('--acc',UI.acc||DEF_ACC);
+  r.setProperty('--bg',UI.bg||'#f4f6f8');
+  r.setProperty('--card',UI.card||'#ffffff');
+  r.setProperty('--txt',UI.txt||'#1e293b');
+  document.body.style.fontFamily=UI.font||'';
+  document.body.style.fontSize=UI.fs?UI.fs+'px':'';
+}
+function openUI(){
+  document.getElementById('uiAcc').value=UI.acc||DEF_ACC;
+  document.getElementById('uiBg').value=UI.bg||'#f4f6f8';
+  document.getElementById('uiCard').value=UI.card||'#ffffff';
+  document.getElementById('uiTxt').value=UI.txt||'#1e293b';
+  document.getElementById('uiFont').value=UI.font||'';
+  document.getElementById('uiFs').value=UI.fs||14;
+  document.getElementById('uiModal').style.display='flex';
+}
+function closeUI(){document.getElementById('uiModal').style.display='none';}
+function saveUI(){
+  UI={acc:document.getElementById('uiAcc').value,bg:document.getElementById('uiBg').value,card:document.getElementById('uiCard').value,txt:document.getElementById('uiTxt').value,font:document.getElementById('uiFont').value,fs:+document.getElementById('uiFs').value||14};
+  localStorage.setItem(UI_KEY,JSON.stringify(UI));
+  applyUI();closeUI();
+}
+function resetUI(){localStorage.removeItem(UI_KEY);UI={};applyUI();closeUI();}
+
+/* ---------- КАРТКА ТОВАРУ ---------- */
+let cardKey=null,cardBales=[];
+function openCard(k){
+  const it=DB.items[k];if(!it)return;
+  cardKey=k;cardBales=it.bales.slice();
+  document.getElementById('imTitle').textContent=nameOf(it);
+  renderCardBody(it);
+  document.getElementById('itemModal').style.display='flex';
+}
+function openNewCard(){
+  cardKey='';cardBales=[];
+  document.getElementById('imTitle').textContent='➕ Нова позиція волокна';
+  renderCardBody({name:'',country:'',note:'',ext:0,bales:[]});
+  document.getElementById('itemModal').style.display='flex';
+  setTimeout(function(){const n=document.getElementById('imName');if(n&&n.focus)n.focus();},50);
+}
+function closeCard(){document.getElementById('itemModal').style.display='none';cardKey=null;}
+function qesc(s){return String(s==null?'':s).replace(/"/g,'&quot;');}
+function allCountries(){var s={};Object.values(DB.items).forEach(function(it){if(it.country)s[it.country]=1;});return Object.keys(s).sort(function(a,b){return a.localeCompare(b,'uk');});}
+function countrySelectHTML(cur){
+  cur=cur||'';
+  var list=allCountries();
+  if(cur&&list.indexOf(cur)<0){list.push(cur);list.sort(function(a,b){return a.localeCompare(b,'uk');});}
+  var opts='<option value="">— без країни —</option>';
+  list.forEach(function(c){opts+='<option value="'+qesc(c)+'"'+(c===cur?' selected':'')+'>'+c+'</option>';});
+  opts+='<option value="__new__">➕ Інша країна…</option>';
+  return '<select id="imCountry" data-prev="'+qesc(cur)+'" onchange="countrySel(this)">'+opts+'</select>';
+}
+function countrySel(sel){
+  if(sel.value==='__new__'){
+    var c=(prompt('Назва нової країни:')||'').trim();
+    if(c){
+      var found=null;for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===c)found=sel.options[i];}
+      if(!found){var opt=document.createElement('option');opt.value=c;opt.textContent=c;sel.insertBefore(opt,sel.options[sel.options.length-1]);}
+      sel.value=c;
+    }else{sel.value=sel.getAttribute('data-prev')||'';}
+  }
+  sel.setAttribute('data-prev',sel.value);
+}
+function renderCardBody(it){
+  const body=document.getElementById('imBody');
+  const ops=DB.ops.filter(o=>o.key===cardKey).slice(-15).reverse();
+  let hist;
+  if(ops.length){
+    hist='<h4 style="margin:16px 0 6px;color:var(--mut);font-size:13px">Останні операції по товару</h4><div class="scroll" style="max-height:220px"><table>'+
+      '<tr><th>Дата</th><th>Операція</th><th class="num">Тюків</th><th class="num">кг</th><th>Клієнт</th></tr>'+
+      ops.map(o=>`<tr><td style="white-space:nowrap">${o.date} <span class="balelist">${(o.ts||'').slice(11,16)}</span></td><td><span class="badge ${o.adj?'b-adj':(o.type==='in'?'b-in':'b-out')}">${o.adj?(o.type==='in'?'Рев +':'Рев −'):(o.type==='in'?'Прихід':'Списання')}</span></td><td class="num">${o.count}</td><td class="num">${fmt(o.kg)}</td><td>${o.client||''}</td></tr>`).join('')+
+      '</table></div>';
+  }else hist='<div class="sub" style="margin-top:14px">Операцій по цьому товару ще немає</div>';
+  body.innerHTML=
+    '<div class="row">'+
+      '<div><label>Назва волокна</label><input id="imName" value="'+qesc(it.name)+'"></div>'+
+      '<div><label>Країна</label>'+countrySelectHTML(it.country)+'</div>'+
+    '</div>'+
+    '<div class="row"><div style="flex:2"><label>Примітка</label><input id="imNote" value="'+qesc(it.note)+'" placeholder="будь-які нотатки..."></div>'+
+      '<div style="flex:0;min-width:150px"><label>Склад Ф, кг</label><input id="imExt" type="number" step="0.1" oninput="cardSum()" value="'+(extOf(it)||'')+'"></div></div>'+
+    '<label>Тюки на цьому складі (кг)</label>'+
+    '<div id="imBales" class="balebox"></div>'+
+    '<div class="row" style="align-items:flex-end">'+
+      '<div style="flex:0;min-width:150px"><label>Додати тюк, кг</label><input id="imAddW" type="number" step="0.1" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addCardBale();}"></div>'+
+      '<div style="flex:0"><button class="btn ghost sm" onclick="addCardBale()">➕ Додати тюк</button></div>'+
+    '</div>'+
+    '<div class="sub" id="imSum"></div>'+
+    hist+
+    '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">'+
+      '<button class="btn grn" onclick="saveCard()">💾 Зберегти</button>'+
+      '<button class="btn ghost" onclick="closeCard()">Закрити</button>'+
+      (cardKey?'<button class="btn red" style="margin-left:auto" onclick="deleteCard()">🗑 Видалити позицію</button>':'')+
+    '</div>';
+  renderCardBales();
+}
+function renderCardBales(){
+  const box=document.getElementById('imBales');if(!box)return;
+  box.innerHTML=cardBales.map((w,i)=>'<span class="bale" style="display:inline-flex;align-items:center;gap:6px"><input class="imw" type="number" step="0.1" value="'+w+'" style="width:74px;padding:5px 6px;font-size:13px" onchange="cardBales['+i+']=parseFloat((this.value||\'\').replace(\',\',\'.\'))||0;cardSum()"><button class="del" onclick="delCardBale('+i+')">✕</button></span>').join('')||'<span class="sub">немає тюків</span>';
+  cardSum();
+}
+function cardSum(){
+  const el=document.getElementById('imSum');if(!el)return;
+  const n=cardBales.filter(w=>w>0).length;
+  const k=cardBales.reduce((s,w)=>s+(w>0?w:0),0);
+  const ext=parseFloat(((document.getElementById('imExt')||{}).value||'').toString().replace(',','.'))||0;
+  el.textContent='Тут: '+n+' тюків · '+fmt(+k.toFixed(1))+' кг'+(ext?' · Склад Ф: '+fmt(ext)+' кг · разом '+fmt(+(k+ext).toFixed(1))+' кг':'');
+}
+function addCardBale(){
+  const inp=document.getElementById('imAddW');
+  const w=parseFloat((inp.value||'').replace(',','.'));
+  if(!(w>0)){alert('Введіть вагу тюка (кг)');return;}
+  cardBales.push(+w.toFixed(1));inp.value='';renderCardBales();if(inp.focus)inp.focus();
+}
+function delCardBale(i){cardBales.splice(i,1);renderCardBales();}
+function saveCard(){
+  const name=(document.getElementById('imName').value||'').trim();
+  const country=(document.getElementById('imCountry').value||'').trim();
+  const note=(document.getElementById('imNote').value||'').trim();
+  const ext=parseFloat((document.getElementById('imExt').value||'').toString().replace(',','.'))||0;
+  if(!name){alert('Назва не може бути порожньою');return;}
+  const ws=[].slice.call(document.querySelectorAll('#imBales .imw')).map(function(e){return parseFloat((e.value||'').replace(',','.'));}).filter(function(x){return x>0;});
+  const newExt=+(+ext).toFixed(1);
+  const newKey=keyOf({name:name,country:country});
+  const balesArr=ws.map(function(x){return +x.toFixed(1);});
+  if(!cardKey){
+    // СТВОРЕННЯ нової позиції
+    if(DB.items[newKey]){alert('Позиція «'+name+(country?' ('+country+')':'')+'» вже існує. Відкрийте її з таблиці для редагування.');return;}
+    DB.items[newKey]={name:name,country:country,note:note,ext:newExt,bales:balesArr};
+    if(newExt)DB.ops.push({id:newId(),type:'extadj',date:today(),key:newKey,from:0,to:newExt,diff:newExt,comment:'Нова позиція',ts:lstamp(new Date())});
+    save();renderStock();closeCard();
+    return;
+  }
+  const it=DB.items[cardKey];if(!it)return;
+  if(newKey!==cardKey&&DB.items[newKey]){alert('Позиція з такою назвою і країною вже існує. Змініть назву.');return;}
+  const oldExt=extOf(it);
+  const upd={name:name,country:country,note:note,ext:newExt,bales:balesArr};
+  if(newKey!==cardKey){
+    delete DB.items[cardKey];
+    DB.items[newKey]=upd;
+    DB.ops.forEach(function(o){if(o.key===cardKey)o.key=newKey;});
+    cardKey=newKey;
+  }else{
+    Object.assign(DB.items[cardKey],upd);
+  }
+  if(newExt!==oldExt)DB.ops.push({id:newId(),type:'extadj',date:today(),key:cardKey,from:oldExt,to:newExt,diff:+(newExt-oldExt).toFixed(1),comment:'Змінено в картці',ts:lstamp(new Date())});
+  save();renderStock();
+  closeCard();
+}
+function deleteCard(){
+  if(!cardKey)return;
+  const it=DB.items[cardKey];if(!it)return;
+  if(!confirm('Видалити позицію «'+nameOf(it)+'»?\nІсторія операцій залишиться в журналі.'))return;
+  delete DB.items[cardKey];
+  save();renderStock();closeCard();
+}
+
+
+/* ---------- СКЛАД Ф (місячна звірка + історія) ---------- */
+
+/* ---------- ІМПОРТ СКЛАДУ Ф З EXCEL ---------- */
+let extfPlan=[];
+let impRows=[],impHIdx=0,impCols=0;
+function extfImport(input){
+  const file=input.files[0];if(!file)return;
+  if(typeof XLSX==='undefined'){alert('Бібліотека Excel не завантажилась (немає інтернету). Спробуйте пізніше.');input.value='';return;}
+  const r=new FileReader();
+  r.onload=function(e){
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      input.value='';
+      if(!rows.length){alert('Файл порожній.');return;}
+      const norm=function(v){return String(v==null?'':v).trim().toLowerCase();};
+      const isKg=function(s){return /остаток|залиш/.test(s)&&/кін|кон/.test(s)&&!/початок|начал/.test(s);};
+      const isName=function(s){return /назв|наймен|наимен|волокно|товар/.test(s);};
+      const isCountry=function(s){return /кра[її]н|похо/.test(s);};
+      let hIdx=-1,kgCol=-1,nameCol=-1,cntCol=-1;
+      for(let ri=0;ri<rows.length;ri++){
+        const row=rows[ri];if(!row)continue;
+        for(let ci=0;ci<row.length;ci++){if(isKg(norm(row[ci]))){hIdx=ri;kgCol=ci;break;}}
+        if(hIdx>=0){for(let ci=0;ci<row.length;ci++){const s=norm(row[ci]);if(nameCol<0&&isName(s))nameCol=ci;if(cntCol<0&&isCountry(s))cntCol=ci;}break;}
+      }
+      if(hIdx<0)hIdx=0;
+      impRows=rows;impHIdx=hIdx;
+      impCols=rows.reduce(function(m,r){return Math.max(m,r?r.length:0);},0);
+      if(nameCol<0){const hr=rows[hIdx]||[];for(let ci=0;ci<hr.length;ci++){if(isName(norm(hr[ci]))){nameCol=ci;break;}}}
+      if(nameCol<0)nameCol=0;
+      openImpMap(nameCol,cntCol,kgCol);
+    }catch(err){alert('Помилка читання файлу: '+err.message);input.value='';}
+  };
+  r.readAsArrayBuffer(file);
+}
+function impColOpts(sel,withNone){
+  const hr=impRows[impHIdx]||[];
+  let o=withNone?('<option value="-1"'+(sel<0?' selected':'')+'>— немає —</option>'):'';
+  for(let i=0;i<impCols;i++){const lab=(String(hr[i]==null?'':hr[i]).trim())||('Колонка '+(i+1));o+='<option value="'+i+'"'+(i===sel?' selected':'')+'>'+lab+'</option>';}
+  return o;
+}
+function openImpMap(nm,ct,kg){
+  const body=document.getElementById('extfImpBody');
+  body.innerHTML='<div class="sub">Оберіть, з якої колонки брати дані (рядок-заголовок: '+(impHIdx+1)+'). Дані по кг беруться <b>лише з однієї</b> вибраної колонки.</div>'+
+    '<div class="row">'+
+    '<div><label>Колонка «Назва»</label><select id="mapName">'+impColOpts(nm,false)+'</select></div>'+
+    '<div><label>Колонка «Країна»</label><select id="mapCnt">'+impColOpts(ct,true)+'</select></div>'+
+    '<div><label>Колонка «Кг» (Остаток на кінець місяця)</label><select id="mapKg">'+impColOpts(kg,false)+'</select></div>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn" onclick="impBuildPreview()">Далі →</button><button class="btn ghost" onclick="closeExtfImp()">Скасувати</button></div>';
+  document.getElementById('extfImpModal').style.display='flex';
+}
+function impBuildPreview(){
+  const nameCol=+document.getElementById('mapName').value;
+  const cntCol=+document.getElementById('mapCnt').value;
+  const kgCol=+document.getElementById('mapKg').value;
+  const isNum=function(v){if(typeof v==='number')return true;const s=String(v).trim();return s!==''&&/^[-\d\s.,]+$/.test(s);};
+  const parsed=[];
+  for(let ri=impHIdx+1;ri<impRows.length;ri++){
+    const row=impRows[ri];if(!row||!row.length)continue;
+    const name=String(row[nameCol]==null?'':row[nameCol]).trim();
+    if(/^(разом|всього|усього|итого|итог|сума|total)/i.test(name))break;
+    if(!name)continue;
+    const country=cntCol>=0?String(row[cntCol]==null?'':row[cntCol]).trim():'';
+    const raw=row[kgCol];
+    let kg=0;
+    if(isNum(raw)&&String(raw).trim()!==''){kg=parseFloat(String(raw).replace(/\s/g,'').replace(',','.'));}
+    if(isNaN(kg))kg=0;
+    parsed.push({name:name,country:country,kg:+(+kg).toFixed(1)});
+  }
+  if(!parsed.length){alert('У вибраній колонці немає даних. Перевірте вибір колонок.');return;}
+  buildExtfPlan(parsed);
+}
+function removeImpRow(i){extfPlan.splice(i,1);renderExtfImp();}
+function buildExtfPlan(parsed){
+  extfPlan=parsed.map(function(p){
+    const cnt=(p.country||'').trim();
+    if(cnt){
+      const k=keyOf({name:p.name,country:cnt});
+      const it=DB.items[k];
+      if(it)return {name:p.name,country:cnt,kg:p.kg,key:k,from:extOf(it),status:'upd',disp:nameOf(it)};
+      return {name:p.name,country:cnt,kg:p.kg,key:k,from:0,status:'new',disp:p.name+' ('+cnt+')'};
+    }
+    const matches=Object.values(DB.items).filter(function(it){return (it.name||'').trim().toLowerCase()===p.name.trim().toLowerCase();});
+    if(matches.length===1){const it=matches[0];return {name:p.name,country:it.country||'',kg:p.kg,key:keyOf(it),from:extOf(it),status:'upd',disp:nameOf(it)};}
+    if(matches.length===0){const k=keyOf({name:p.name,country:''});return {name:p.name,country:'',kg:p.kg,key:k,from:0,status:'new',disp:p.name};}
+    return {name:p.name,kg:p.kg,status:'amb',disp:p.name,variants:matches.map(nameOf)};
+  });
+  renderExtfImp();
+  document.getElementById('extfImpModal').style.display='flex';
+}
+function renderExtfImp(){
+  const body=document.getElementById('extfImpBody');
+  let upd=extfPlan.filter(p=>p.status==='upd'&&p.kg!==p.from).length;
+  let neu=extfPlan.filter(p=>p.status==='new').length;
+  let amb=extfPlan.filter(p=>p.status==='amb').length;
+  let same=extfPlan.filter(p=>p.status==='upd'&&p.kg===p.from).length;
+  let totalKg=extfPlan.filter(p=>p.status!=='amb').reduce(function(s,p){return s+(p.kg||0);},0);
+  let html='<div class="sub">Рядків: '+extfPlan.length+' · оновиться: '+upd+' · нових: '+neu+(same?' · без змін: '+same:'')+(amb?' · неоднозначних: '+amb:'')+'</div>';
+  html+='<div class="scroll" style="max-height:50vh"><table><tr><th>Волокно</th><th class="num">Було, кг</th><th class="num">Стане, кг</th><th>Статус</th><th></th></tr>';
+  extfPlan.forEach(function(p,i){
+    let st,cl='';
+    if(p.status==='new'){st='нова позиція';cl='color:var(--acc)';}
+    else if(p.status==='amb'){st='неоднозначно ('+p.variants.length+') — пропущено';cl='color:var(--red)';}
+    else if(p.kg===p.from){st='без змін';cl='color:var(--mut)';}
+    else{const d=p.kg-p.from;st=(d>0?'+':'')+fmt(+d.toFixed(1))+' кг';cl=d>=0?'color:var(--grn)':'color:var(--red)';}
+    html+='<tr><td>'+p.disp+'</td><td class="num">'+(p.status==='amb'?'—':fmt(p.from))+'</td><td class="num"><b>'+fmt(p.kg)+'</b></td><td style="'+cl+'">'+st+'</td><td><button class="del" title="Прибрати з імпорту" onclick="removeImpRow('+i+')">✕</button></td></tr>';
+  });
+  html+='<tr class="grand"><td>ВСЬОГО</td><td></td><td class="num">'+fmt(+totalKg.toFixed(1))+' кг</td><td colspan="2"></td></tr>';
+  html+='</table></div>';
+  html+='<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn grn" onclick="applyExtfImport()">✅ Застосувати імпорт</button><button class="btn ghost" onclick="openImpMapReopen()">← Колонки</button><button class="btn ghost" onclick="closeExtfImp()">Скасувати</button></div>';
+  body.innerHTML=html;
+}
+function openImpMapReopen(){const hr=impRows[impHIdx]||[];openImpMap(0,-1,0);}
+function closeExtfImp(){document.getElementById('extfImpModal').style.display='none';extfPlan=[];}
+function applyExtfImport(){
+  const date=document.getElementById('extfDate').value||today();
+  const comment=(document.getElementById('extfComment').value||'').trim()||'Імпорт Excel';
+  let n=0,created=0;
+  extfPlan.forEach(function(p){
+    if(p.status==='amb')return;
+    if(p.status==='new'){
+      if(!DB.items[p.key]){DB.items[p.key]={name:p.name,country:p.country||'',note:'',ext:0,bales:[]};created++;}
+    }
+    if(setExtVal(p.key,p.kg,date,comment))n++;
+  });
+  save();renderStock();renderExtfList();renderExtfHist();
+  closeExtfImp();
+  const msg=document.getElementById('extfMsg');
+  msg.className='msg ok';msg.textContent='✔ Імпорт завершено: оновлено '+n+' позиц.'+(created?' (створено нових: '+created+')':'')+'. Зміни записані в історію.';
+}
+
+function setExtVal(key,newVal,date,comment){
+  const it=DB.items[key];if(!it)return false;
+  const from=extOf(it);
+  const to=+(+newVal).toFixed(1);
+  if(from===to)return false;
+  it.ext=to;
+  DB.ops.push({id:newId(),type:'extadj',date:date||today(),key:key,from:from,to:to,diff:+(to-from).toFixed(1),comment:comment||'',ts:lstamp(new Date())});
+  return true;
+}
+function toggleExtfManual(){
+  const m=document.getElementById('extfManual'),b=document.getElementById('extfManBtn');
+  const open=m.style.display==='none';
+  m.style.display=open?'':'none';
+  if(b)b.textContent=open?'✕ Сховати ручну звірку':'✍️ Ручна звірка залишків';
+  if(open)renderExtfList();
+}
+function prepExtf(){
+  const d=document.getElementById('extfDate');if(d&&!d.value)d.value=today();
+  renderExtfList();renderExtfHist();
+}
+function renderExtfList(){
+  const box=document.getElementById('extfList');if(!box)return;
+  const q=((document.getElementById('extfSearch')||{}).value||'').toLowerCase().trim();
+  let items=itemsSorted();
+  if(q)items=items.filter(it=>nameOf(it).toLowerCase().includes(q));
+  let html='<table><tr><th>Волокно</th><th class="num">Зараз Ф, кг</th><th class="num" style="width:150px">Новий факт, кг</th></tr>';
+  items.forEach(it=>{
+    const k=keyOf(it);
+    html+=`<tr><td>${nameOf(it)}</td><td class="num">${fmt(extOf(it))}</td><td><input class="extfin" data-key="${qesc(k)}" type="number" step="0.1" value="${extOf(it)||''}" style="padding:6px 8px;font-size:14px"></td></tr>`;
+  });
+  html+='</table>';
+  box.innerHTML=html;
+}
+function saveExtf(){
+  const msg=document.getElementById('extfMsg');
+  const date=document.getElementById('extfDate').value||today();
+  const comment=(document.getElementById('extfComment').value||'').trim();
+  const inps=[].slice.call(document.querySelectorAll('#extfList .extfin'));
+  let n=0;
+  inps.forEach(function(e){
+    const k=e.getAttribute('data-key');
+    const v=e.value===''?0:parseFloat((e.value||'').replace(',','.'));
+    if(isNaN(v)||v<0)return;
+    if(setExtVal(k,v,date,comment))n++;
+  });
+  if(!n){msg.className='msg err';msg.textContent='Жодного значення не змінено.';return;}
+  save();renderStock();renderExtfList();renderExtfHist();
+  document.getElementById('extfComment').value='';
+  msg.className='msg ok';msg.textContent='✔ Оновлено Склад Ф: змінено '+n+' позиц. Зміни записані в історію нижче.';
+}
+function renderExtfHist(){
+  const box=document.getElementById('extfHist');if(!box)return;
+  const ops=DB.ops.filter(o=>o.type==='extadj').slice().reverse();
+  if(!ops.length){box.innerHTML='<div class="sub">Історія змін Складу Ф з\'явиться після першого збереження</div>';return;}
+  let html='<h4 style="margin:16px 0 6px;color:var(--mut);font-size:13px">Історія змін Складу Ф</h4><div class="scroll"><table><tr><th>Дата</th><th>Волокно</th><th class="num">Було</th><th class="num">Стало</th><th class="num">Зміна</th><th>Коментар</th><th></th></tr>';
+  ops.forEach(o=>{
+    const it=DB.items[o.key];
+    const d=o.diff||0;
+    html+=`<tr><td style="white-space:nowrap">${o.date} <span class="balelist">${(o.ts||'').slice(11,16)}</span></td><td>${it?nameOf(it):o.key}</td><td class="num">${fmt(o.from)}</td><td class="num"><b>${fmt(o.to)}</b></td><td class="num" style="color:${d>=0?'var(--grn)':'var(--red)'}">${d>0?'+':''}${fmt(d)}</td><td>${o.comment||''}</td><td><button class="del" title="Скасувати запис (поверне попереднє значення)" onclick="delExtAdj(${o.id})">✕</button></td></tr>`;
+  });
+  html+='</table></div>';
+  box.innerHTML=html;
+}
+function delExtAdj(id){
+  const o=DB.ops.find(x=>x.id===id);if(!o)return;
+  if(!confirm('Скасувати цей запис? Склад Ф повернеться до значення «'+fmt(o.from)+' кг».'))return;
+  const it=DB.items[o.key];
+  if(it)it.ext=+(+o.from).toFixed(1);
+  DB.ops=DB.ops.filter(x=>x.id!==id);
+  save();renderStock();renderExtfList();renderExtfHist();
+}
+function dlStock(){
+  const q=(document.getElementById('stockSearch').value||'').toLowerCase();
+  const hz=document.getElementById('hideZero').checked;
+  const hzm=document.getElementById('hideZeroMain')&&document.getElementById('hideZeroMain').checked;
+  const aoa=repHead('ЗАЛИШКИ ВОЛОКНА','Станом на: '+today());
+  aoa.push(['Назва','Країна','Тюків','Вага тут, кг','Склад Ф, кг','Разом, кг']);
+  let tc=0,tk=0,te=0;
+  itemsSorted().forEach(function(it){
+    if(hz&&!it.bales.length&&!extOf(it))return;
+    if(hzm&&!it.bales.length)return;
+    if(q&&!nameOf(it).toLowerCase().includes(q))return;
+    const k=kgOf(it),e=extOf(it);
+    aoa.push([it.name,it.country||'',it.bales.length,r1(k),r1(e),r1(k+e)]);
+    tc+=it.bales.length;tk+=k;te+=e;
+  });
+  aoa.push([]);
+  aoa.push(['ВСЬОГО','',tc,r1(tk),r1(te),r1(tk+te)]);
+  aoaSave(aoa,[30,16,10,14,14,14],'Залишки','Волокно_залишки_'+today());
+}
+function dlExtf(){
+  const ops=DB.ops.filter(o=>o.type==='extadj');
+  if(!ops.length){alert('Історія змін Складу Ф порожня.');return;}
+  const aoa=repHead('СКЛАД Ф — ІСТОРІЯ ЗМІН','Сформовано: '+new Date().toLocaleString('uk-UA'));
+  aoa.push(['Дата','Час','Волокно','Було, кг','Стало, кг','Зміна, кг','Коментар']);
+  ops.forEach(o=>{const it=DB.items[o.key];aoa.push([o.date,(o.ts||'').slice(11,16),it?nameOf(it):o.key,o.from,o.to,o.diff,o.comment||'']);});
+  aoaSave(aoa,[12,7,30,12,12,12,26],'Склад Ф','Склад_Ф_історія_'+today());
+}
+
+const COLS={
+  name   :{label:'Назва',        num:false, val:it=>`<b class="nmlink" onclick="openCard('${escAttr(keyOf(it))}')">${it.name}</b>${it.note?' <span class="ntag" title="'+qesc(it.note)+'">📝</span>':''}`, sort:it=>it.name},
+  country:{label:'Країна',       num:false, val:it=>it.country||'—', sort:it=>it.country||''},
+  count  :{label:'Тюків, шт',    num:true,  val:it=>'<b>'+fmt(it.bales.length)+'</b>', sort:it=>it.bales.length},
+  kg     :{label:'Вага, кг',     num:true,  val:it=>fmt(kgOf(it)), sort:it=>kgOf(it)},
+  avg    :{label:'Середній тюк', num:true,  val:it=>it.bales.length?fmt(+(kgOf(it)/it.bales.length).toFixed(1)):'—', sort:it=>it.bales.length?kgOf(it)/it.bales.length:0},
+  ext    :{label:'Склад Ф, кг', num:true,  val:it=>`<span class="extcell" onclick="editExt('${escAttr(keyOf(it))}')" title="Натисніть, щоб змінити">${extOf(it)?fmt(extOf(it)):'<span class=\"extadd\">+ дод.</span>'} ✎</span>`, sort:it=>extOf(it)},
+  total  :{label:'Разом, кг',   num:true,  val:it=>'<b>'+fmt(+(kgOf(it)+extOf(it)).toFixed(1))+'</b>', sort:it=>kgOf(it)+extOf(it)},
+  bales  :{label:'Ваги тюків',   num:false, val:it=>`<span class="balelist" title="${it.bales.join(', ')}">${balesStr(it)}</span>`, sort:it=>it.bales.length}
+};
+const DEFAULT_ORDER=['name','country','count','kg','ext','total','avg','bales'];
+function prefs(){
+  if(!DB.prefs)DB.prefs={};
+  if(!Array.isArray(DB.prefs.colOrder)||DB.prefs.colOrder.length!==DEFAULT_ORDER.length)DB.prefs.colOrder=DEFAULT_ORDER.slice();
+  if(!DB.prefs.sort)DB.prefs.sort={col:null,dir:1};
+  if(!Array.isArray(DB.prefs.hidden))DB.prefs.hidden=[];
+  if(!DB.prefs.colW)DB.prefs.colW={};
+  return DB.prefs;
+}
+function sortBy(col){
+  if(rszFlag)return;
+  const p=prefs();
+  if(p.sort.col===col){ if(p.sort.dir===1)p.sort.dir=-1; else p.sort={col:null,dir:1}; }
+  else p.sort={col,dir:1};
+  save();renderStock();
+}
+let dragCol=null;
+function colDrop(target){
+  const p=prefs(), o=p.colOrder;
+  const from=o.indexOf(dragCol), to=o.indexOf(target);
+  if(from<0||to<0||from===to)return;
+  o.splice(to,0,o.splice(from,1)[0]);
+  save();renderStock();
+}
+function toggleColMenu(){
+  const m=document.getElementById('colMenu');
+  if(m.style.display==='block'){m.style.display='none';return;}
+  const p=prefs();
+  m.innerHTML='<b style="font-size:12px;color:var(--mut)">Показувати колонки:</b>'+
+    p.colOrder.map(id=>`<label><input type="checkbox" ${p.hidden.includes(id)?'':'checked'} onchange="toggleCol('${id}')"> ${COLS[id].label}</label>`).join('')+
+    `<button class="btn ghost sm" style="margin-top:6px;width:100%" onclick="resetCols()">↺ Скинути налаштування</button>`;
+  m.style.display='block';
+}
+function toggleCol(id){
+  const p=prefs();
+  if(p.hidden.includes(id))p.hidden=p.hidden.filter(x=>x!==id);
+  else{
+    if(p.hidden.length>=DEFAULT_ORDER.length-1){alert('Має лишитись хоча б одна колонка');return;}
+    p.hidden.push(id);
+  }
+  save();renderStock();toggleColMenu();toggleColMenu();
+}
+function resetCols(){
+  const p=prefs();
+  p.hidden=[];p.colW={};p.colOrder=DEFAULT_ORDER.slice();p.sort={col:null,dir:1};
+  save();renderStock();
+  document.getElementById('colMenu').style.display='none';
+}
+let rszFlag=false;
+function startRsz(e,id){
+  e.preventDefault();e.stopPropagation();
+  rszFlag=true;
+  const th=e.target.parentElement, startX=e.clientX, startW=th.offsetWidth, p=prefs();
+  const tbl=document.getElementById('stockTable');
+  tbl.querySelectorAll('tr:first-child th').forEach(t=>{if(t.dataset.col)p.colW[t.dataset.col]=p.colW[t.dataset.col]||t.offsetWidth;});
+  tbl.style.tableLayout='fixed';
+  const move=ev=>{p.colW[id]=Math.max(50,startW+ev.clientX-startX);th.style.width=p.colW[id]+'px';};
+  const up=()=>{
+    document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);
+    save();renderStock();
+    setTimeout(()=>rszFlag=false,80);
+  };
+  document.addEventListener('mousemove',move);
+  document.addEventListener('mouseup',up);
+}
+function itemsSorted(){
+  return Object.values(DB.items).sort((a,b)=>a.name.localeCompare(b.name,'uk')||((a.country||'').localeCompare(b.country||'','uk')));
+}
+function renderStockMobile(){
+  const q=(document.getElementById('stockSearch').value||'').toLowerCase();
+  const hz=document.getElementById('hideZero').checked;
+  const hzm=document.getElementById('hideZeroMain')&&document.getElementById('hideZeroMain').checked;
+  const p=prefs();
+  let items=itemsSorted();
+  if(p.sort.col){
+    const c=COLS[p.sort.col], d=p.sort.dir;
+    items=items.slice().sort((a,b)=>{const va=c.sort(a),vb=c.sort(b);return (typeof va==='string'?va.localeCompare(vb,'uk'):va-vb)*d;});
+  }
+  let html='',g={c:0,k:0,e:0};
+  items.forEach(it=>{
+    if(hz&&!it.bales.length&&!extOf(it))return;
+    if(hzm&&!it.bales.length)return;
+    if(q&&!nameOf(it).toLowerCase().includes(q))return;
+    const k=kgOf(it);const ke=extOf(it);g.c+=it.bales.length;g.k+=k;g.e+=ke;
+    const ws=it.bales.join(', ');
+    const hid=id=>p.hidden.includes(id);
+    const l2=[];
+    if(!hid('count'))l2.push(`<b>${fmt(it.bales.length)} тюків</b>`);
+    if(!hid('kg'))l2.push(fmt(k)+' кг');
+    if(!hid('ext'))l2.push(`<span class="extcell" onclick="editExt('${escAttr(keyOf(it))}')">Ф: ${ke?fmt(ke):'+дод.'} ✎</span>`);
+    if(!hid('total'))l2.push(`разом <b>${fmt(+(k+ke).toFixed(1))} кг</b>`);
+    if(!hid('avg')&&it.bales.length)l2.push('сер. '+fmt(+(k/it.bales.length).toFixed(1)));
+    html+=`<div class="mcard${it.bales.length?'':' zero2'}"><div class="mc1"><b class="nmlink" onclick="openCard('${escAttr(keyOf(it))}')">${it.name}</b>${it.note?' 📝':''}${(!hid('country')&&it.country)?' · '+it.country:''}</div>${l2.length?`<div class="mc2">${l2.join(' · ')}</div>`:''}${(ws&&!hid('bales'))?`<div class="mc2" style="margin-top:2px">${ws}</div>`:''}</div>`;
+  });
+  html+=`<div class="mtot grandm">ВСЬОГО: ${fmt(g.c)} тюків · ${fmt(Math.round(g.k))} кг${g.e?' · Ф '+fmt(Math.round(g.e))+' кг':''} · разом ${fmt(Math.round(g.k+g.e))} кг</div>`;
+  document.getElementById('stockTable').innerHTML='';
+  document.getElementById('stockCards').innerHTML=html;
+  const todOut=DB.ops.filter(o=>o.type==='out'&&o.date===today());
+  const todIn=DB.ops.filter(o=>o.type==='in'&&o.date===today());
+  document.getElementById('stockStats').innerHTML=
+   `<div class="stat"><div class="v">${fmt(Math.round(g.k))}</div><div class="l">кг тут</div></div>
+    <div class="stat"><div class="v">${fmt(Math.round(g.e))}</div><div class="l">кг Склад Ф</div></div>
+    <div class="stat"><div class="v" style="color:var(--acc)">${fmt(Math.round(g.k+g.e))}</div><div class="l">РАЗОМ, кг</div></div>
+    <div class="stat"><div class="v">${fmt(g.c)}</div><div class="l">тюків</div></div>
+    <div class="stat"><div class="v" style="color:var(--red)">${fmt(todOut.reduce((s,o)=>s+o.kg,0))}</div><div class="l">списано сьогодні, кг</div></div>
+    <div class="stat"><div class="v" style="color:var(--grn)">${fmt(todIn.reduce((s,o)=>s+o.kg,0))}</div><div class="l">прихід сьогодні, кг</div></div>`;
+}
+function renderStock(){
+  if(window.matchMedia&&window.matchMedia('(max-width:700px)').matches)return renderStockMobile();
+  const q=(document.getElementById('stockSearch').value||'').toLowerCase();
+  const hz=document.getElementById('hideZero').checked;
+  const hzm=document.getElementById('hideZeroMain')&&document.getElementById('hideZeroMain').checked;
+  const p=prefs();
+  const order=p.colOrder.filter(id=>!p.hidden.includes(id));
+  let items=itemsSorted();
+  if(p.sort.col&&!p.hidden.includes(p.sort.col)){
+    const c=COLS[p.sort.col], d=p.sort.dir;
+    items=items.slice().sort((a,b)=>{
+      const va=c.sort(a), vb=c.sort(b);
+      return (typeof va==='string'? va.localeCompare(vb,'uk') : va-vb)*d;
+    });
+  }
+  let html='<tr>'+order.map(id=>{
+    const c=COLS[id];
+    const arrow=p.sort.col===id?(p.sort.dir===1?' ▲':' ▼'):'';
+    const wst=p.colW[id]?` style="width:${p.colW[id]}px"`:'';
+    return `<th class="srt${c.num?' num':''}" draggable="true" data-col="${id}"${wst}
+      onclick="sortBy('${id}')"
+      ondragstart="if(rszFlag){event.preventDefault();return false;}dragCol='${id}'"
+      ondragover="event.preventDefault();this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="event.preventDefault();this.classList.remove('drag-over');colDrop('${id}')"
+      title="Клік — сортування, перетягніть — порядок, правий край — ширина">⠿ ${c.label}${arrow}<span class="rsz" draggable="false" onmousedown="startRsz(event,'${id}')" onclick="event.stopPropagation()"></span></th>`;
+  }).join('')+'</tr>';
+  let g={c:0,k:0,e:0};
+  items.forEach(it=>{
+    if(hz&&!it.bales.length&&!extOf(it))return;
+    if(hzm&&!it.bales.length)return;
+    const txt=(nameOf(it)).toLowerCase();
+    if(q&&!txt.includes(q))return;
+    g.c+=it.bales.length;g.k+=kgOf(it);g.e+=extOf(it);
+    html+=`<tr class="${it.bales.length?'':'zero'}">`+order.map(id=>`<td${COLS[id].num?' class="num"':''}>${COLS[id].val(it)}</td>`).join('')+'</tr>';
+  });
+  const tv={count:fmt(g.c),kg:fmt(+g.k.toFixed(1)),ext:fmt(+g.e.toFixed(1)),total:fmt(+(g.k+g.e).toFixed(1))};
+  let labelDone=false;
+  html+='<tr class="grand">'+order.map(id=>{
+    if(id in tv){const pre=(!labelDone&&order[0]===id)?'ВСЬОГО: ':'';labelDone=labelDone||!!pre;return `<td class="num">${pre}${tv[id]}</td>`;}
+    if(!labelDone){labelDone=true;return '<td>ВСЬОГО</td>';}
+    return '<td></td>';
+  }).join('')+'</tr>';
+  const tbl=document.getElementById('stockTable');
+  tbl.innerHTML=html;
+  const _sc=document.getElementById('stockCards');if(_sc)_sc.innerHTML='';
+  if(tbl.style)tbl.style.tableLayout=Object.keys(p.colW).length?'fixed':'auto';
+  const todOut=DB.ops.filter(o=>o.type==='out'&&o.date===today());
+  const todIn=DB.ops.filter(o=>o.type==='in'&&o.date===today());
+  document.getElementById('stockStats').innerHTML=
+   `<div class="stat"><div class="v">${fmt(+g.k.toFixed(1))}</div><div class="l">кг тут (${fmt(g.c)} тюків)</div></div>
+    <div class="stat"><div class="v">${fmt(+g.e.toFixed(1))}</div><div class="l">кг на Складі Ф</div></div>
+    <div class="stat"><div class="v" style="color:var(--acc)">${fmt(+(g.k+g.e).toFixed(1))}</div><div class="l">РАЗОМ (обидва склади)</div></div>
+    <div class="stat"><div class="v" style="color:var(--red)">${fmt(todOut.reduce((s,o)=>s+o.kg,0))} кг</div><div class="l">списано сьогодні (${todOut.reduce((s,o)=>s+o.count,0)} тюків)</div></div>
+    <div class="stat"><div class="v" style="color:var(--grn)">${fmt(todIn.reduce((s,o)=>s+o.kg,0))} кг</div><div class="l">прихід сьогодні (${todIn.reduce((s,o)=>s+o.count,0)} тюків)</div></div>`;
+}
+
+/* ---------- ПРИХІД ---------- */
+function prepIn(){
+  if(!document.getElementById('inDate').value)document.getElementById('inDate').value=today();
+  const sel=document.getElementById('inExist');
+  sel.innerHTML='<option value="">— нова позиція —</option>'+itemsSorted().map(it=>`<option value="${keyOf(it)}">${nameOf(it)} (${it.bales.length} тюків, ${fmt(kgOf(it))} кг)</option>`).join('');
+  inSuggest();
+}
+function fillFromExist(){
+  const k=document.getElementById('inExist').value;
+  if(!k)return;
+  const it=DB.items[k];
+  inName.value=it.name;inCountry.value=it.country||'';
+}
+
+/* ---------- ПОШУК + ПАКЕТНІ ОПЕРАЦІЇ ---------- */
+let _sugIn=[],_sugOut=[],_inIdx=-1,_outIdx=-1,inBatch=[],outBatch=[];
+function matchItems(q,onlyStock){
+  const ws=(q||'').toLowerCase().trim().split(/\s+/).filter(Boolean);
+  if(!ws.length)return [];
+  let list=itemsSorted();
+  if(onlyStock)list=list.filter(i=>i.bales.length>0);
+  return list.filter(it=>{const n=nameOf(it).toLowerCase();return ws.every(w=>n.includes(w));}).slice(0,30);
+}
+function inSuggest(keep){
+  const box=document.getElementById('inSugg');if(!box)return;
+  if(!keep){_inIdx=-1;_sugIn=matchItems((document.getElementById('inExistSearch')||{}).value,false);}
+  box.innerHTML=_sugIn.map((it,i)=>`<div class="sug${i===_inIdx?' act':''}" onclick="pickIn(${i})">${nameOf(it)} <span class="sub2">· ${it.bales.length} тюків · ${fmt(kgOf(it))} кг</span></div>`).join('');
+}
+function outSuggest(keep){
+  const box=document.getElementById('outSugg');if(!box)return;
+  if(!keep){_outIdx=-1;_sugOut=matchItems((document.getElementById('outItemSearch')||{}).value,true);}
+  box.innerHTML=_sugOut.map((it,i)=>`<div class="sug${i===_outIdx?' act':''}" onclick="pickOut(${i})">${nameOf(it)} <span class="sub2">· ${it.bales.length} тюків · ${fmt(kgOf(it))} кг</span></div>`).join('');
+}
+function sugKey(e,which){
+  const list=which==='in'?_sugIn:_sugOut;
+  if(!list.length)return;
+  if(e.key==='ArrowDown'){e.preventDefault();if(which==='in'){_inIdx=Math.min(_inIdx+1,list.length-1);inSuggest(true);}else{_outIdx=Math.min(_outIdx+1,list.length-1);outSuggest(true);}}
+  else if(e.key==='ArrowUp'){e.preventDefault();if(which==='in'){_inIdx=Math.max(_inIdx-1,0);inSuggest(true);}else{_outIdx=Math.max(_outIdx-1,0);outSuggest(true);}}
+  else if(e.key==='Enter'){e.preventDefault();if(which==='in')pickIn(_inIdx<0?0:_inIdx);else pickOut(_outIdx<0?0:_outIdx);}
+  else if(e.key==='Escape'){document.getElementById(which==='in'?'inSugg':'outSugg').innerHTML='';}
+}
+function pickIn(i){
+  const it=_sugIn[i];if(!it)return;
+  document.getElementById('inExist').value=keyOf(it);
+  fillFromExist();
+  document.getElementById('inExistSearch').value=nameOf(it);
+  document.getElementById('inSugg').innerHTML='';
+  const w=document.getElementById('inWeights');if(w&&w.focus)w.focus();
+}
+function pickOut(i){
+  const it=_sugOut[i];if(!it)return;
+  document.getElementById('outItem').value=keyOf(it);
+  document.getElementById('outItemSearch').value=nameOf(it);
+  document.getElementById('outSugg').innerHTML='';
+  renderBales();
+}
+function addInLine(){
+  const msg=document.getElementById('inMsg');
+  const name=inName.value.trim(),country=inCountry.value.trim();
+  const w=parseWeights();
+  if(!name||!w.length){msg.className='msg err';msg.textContent='Заповніть назву і ваги тюків (списком або кількість × вага).';return;}
+  inBatch.push({name,country,weights:w});
+  msg.className='msg';msg.textContent='';
+  inWeights.value='';inQty.value='';inOneKg.value='';
+  const s=document.getElementById('inExistSearch');if(s){s.value='';if(s.focus)s.focus();}
+  document.getElementById('inSugg').innerHTML='';
+  renderInBatch();
+}
+function renderInBatch(){
+  const box=document.getElementById('inBatchBox');if(!box)return;
+  if(!inBatch.length){box.innerHTML='';return;}
+  let tc=0,tk=0;
+  box.innerHTML='<b style="font-size:13px">До оприбуткування:</b>'+inBatch.map((x,i)=>{const k=x.weights.reduce((s,v)=>s+v,0);tc+=x.weights.length;tk+=k;
+    return `<div class="bline">${x.name}${x.country?' ('+x.country+')':''} — <b>${x.weights.length} тюків</b> (${fmt(+k.toFixed(1))} кг) <button class="del" onclick="inBatch.splice(${i},1);renderInBatch()">✕</button></div>`;}).join('')+
+    `<div class="bline btot">Разом: ${inBatch.length} позиц. · ${tc} тюків · ${fmt(+tk.toFixed(1))} кг</div>`;
+}
+function addOutLine(){
+  const msg=document.getElementById('outMsg');
+  const k=outItem.value;
+  if(!k||!selBales.size){msg.className='msg err';msg.textContent='Оберіть позицію і тюки.';return;}
+  if(outBatch.some(x=>x.key===k)){msg.className='msg err';msg.textContent='Ця позиція вже у списку — видаліть її рядок, щоб змінити вибір.';return;}
+  const it=DB.items[k];
+  const weights=[...selBales].map(i=>it.bales[i]);
+  outBatch.push({key:k,weights});
+  msg.className='msg';msg.textContent='';
+  selBales=new Set();outItem.value='';
+  const s=document.getElementById('outItemSearch');if(s){s.value='';if(s.focus)s.focus();}
+  document.getElementById('outSugg').innerHTML='';
+  renderBales();renderOutBatch();
+}
+function renderOutBatch(){
+  const box=document.getElementById('outBatchBox');if(!box)return;
+  if(!outBatch.length){box.innerHTML='';return;}
+  let tc=0,tk=0;
+  box.innerHTML='<b style="font-size:13px">До списання:</b>'+outBatch.map((x,i)=>{const it=DB.items[x.key];const k=x.weights.reduce((s,v)=>s+v,0);tc+=x.weights.length;tk+=k;
+    return `<div class="bline">${it?nameOf(it):x.key} — <b>${x.weights.length} тюків</b> (${fmt(+k.toFixed(1))} кг) <button class="del" onclick="outBatch.splice(${i},1);renderOutBatch()">✕</button></div>`;}).join('')+
+    `<div class="bline btot">Разом: ${outBatch.length} позиц. · ${tc} тюків · ${fmt(+tk.toFixed(1))} кг</div>`;
+}
+function parseWeights(){
+  const txt=(inWeights.value||'').trim();
+  if(txt){
+    const w=txt.split(/[\s,;]+/).map(x=>parseFloat(x.replace(',','.'))).filter(x=>x>0);
+    return w;
+  }
+  const q=+inQty.value, one=+inOneKg.value;
+  if(q>0&&one>0)return Array(q).fill(one);
+  return [];
+}
+function doIn(){
+  const msg=document.getElementById('inMsg');
+  const date=inDate.value;
+  if(inName.value.trim()&&parseWeights().length){
+    inBatch.push({name:inName.value.trim(),country:inCountry.value.trim(),weights:parseWeights()});
+    inWeights.value='';inQty.value='';inOneKg.value='';
+  }
+  if(!inBatch.length){msg.className='msg err';msg.textContent='Заповніть форму або додайте позиції до списку.';return;}
+  if(!date){msg.className='msg err';msg.textContent='Вкажіть дату.';renderInBatch();return;}
+  const comment=inComment.value.trim();
+  const bid=newId();
+  let tc=0,tk=0;
+  inBatch.forEach(x=>{
+    const it={name:x.name,country:x.country,bales:[]};
+    const k=keyOf(it);
+    if(!DB.items[k])DB.items[k]=it;
+    DB.items[k].bales.push(...x.weights);
+    const kgv=+x.weights.reduce((s,v)=>s+v,0).toFixed(1);
+    DB.ops.push({id:newId(),type:'in',date,key:k,batch:bid,count:x.weights.length,kg:kgv,weights:x.weights,client:'',comment,ts:lstamp(new Date())});
+    tc+=x.weights.length;tk+=kgv;
+  });
+  const n=inBatch.length;
+  save();
+  inBatch=[];renderInBatch();
+  msg.className='msg ok';msg.textContent=`✔ Оприбутковано ${n} позиц.: ${tc} тюків (${fmt(+tk.toFixed(1))} кг).`;
+  inComment.value='';prepIn();
+}
+
+/* ---------- СПИСАННЯ ---------- */
+let selBales=new Set();
+function prepOut(){
+  if(!document.getElementById('outDate').value)document.getElementById('outDate').value=today();
+  const sel=document.getElementById('outItem');
+  const items=itemsSorted().filter(i=>i.bales.length>0);
+  sel.innerHTML='<option value="">— оберіть позицію —</option>'+items.map(it=>`<option value="${keyOf(it)}">${nameOf(it)} (${it.bales.length} тюків, ${fmt(kgOf(it))} кг)</option>`).join('');
+  selBales=new Set();
+  renderBales();
+}
+function renderBales(){
+  const k=outItem.value, box=document.getElementById('baleBox');
+  selBales=new Set([...selBales].filter(i=>DB.items[k]&&i<DB.items[k].bales.length));
+  if(!k){box.innerHTML='<span class="sub">Спочатку оберіть позицію</span>';outCalcUpd();return;}
+  const it=DB.items[k];
+  box.innerHTML=it.bales.map((w,i)=>`<div class="bale${selBales.has(i)?' sel':''}" onclick="toggleBale(${i})">№${i+1} · ${w} кг</div>`).join('');
+  outCalcUpd();
+}
+function toggleBale(i){
+  if(selBales.has(i))selBales.delete(i);else selBales.add(i);
+  renderBales();
+}
+function selectAllBales(){
+  const k=outItem.value;if(!k)return;
+  const it=DB.items[k];
+  if(selBales.size===it.bales.length)selBales=new Set();
+  else selBales=new Set(it.bales.map((_,i)=>i));
+  renderBales();
+}
+function outCalcUpd(){
+  const k=outItem.value, el=document.getElementById('outCalc');
+  if(!k||!selBales.size){el.textContent=selBales.size?'':'Тюки не вибрано';return;}
+  const it=DB.items[k];
+  const kg=[...selBales].reduce((s,i)=>s+it.bales[i],0);
+  el.innerHTML=`Вибрано: <b>${selBales.size} тюків, ${fmt(+kg.toFixed(1))} кг</b> → залишиться ${it.bales.length-selBales.size} тюків`;
+}
+function doOut(){
+  const msg=document.getElementById('outMsg');
+  const date=outDate.value;
+  if(outItem.value&&selBales.size){
+    addOutLine();
+    if((document.getElementById('outMsg').className||'').includes('err'))return;
+  }
+  if(!outBatch.length){msg.className='msg err';msg.textContent='Додайте хоча б одну позицію до списку.';return;}
+  if(!date){msg.className='msg err';msg.textContent='Вкажіть дату.';return;}
+  for(const x of outBatch){
+    const it=DB.items[x.key];
+    if(!it){msg.className='msg err';msg.textContent='Позицію не знайдено: '+x.key;return;}
+    const pool=it.bales.slice();
+    for(const w of x.weights){const i=pool.indexOf(w);if(i<0){msg.className='msg err';msg.textContent='Тюк '+w+' кг у «'+nameOf(it)+'» вже відсутній — оновіть сторінку.';return;}pool.splice(i,1);}
+  }
+  const client=outClient.value.trim(),comment=outComment.value.trim();
+  const bid=newId();
+  let tc=0,tk=0;
+  outBatch.forEach(x=>{
+    const it=DB.items[x.key];
+    x.weights.forEach(w=>{const i=it.bales.indexOf(w);if(i>=0)it.bales.splice(i,1);});
+    const kgv=+x.weights.reduce((s,v)=>s+v,0).toFixed(1);
+    DB.ops.push({id:newId(),type:'out',date,key:x.key,batch:bid,count:x.weights.length,kg:kgv,weights:x.weights,client,comment,ts:lstamp(new Date())});
+    tc+=x.weights.length;tk+=kgv;
+  });
+  const n=outBatch.length;
+  save();
+  outBatch=[];renderOutBatch();
+  msg.className='msg ok';msg.textContent=`✔ Списано ${n} позиц.: ${tc} тюків (${fmt(+tk.toFixed(1))} кг).`;
+  outClient.value='';outComment.value='';
+  prepOut();
+}
+
+/* ---------- ЖУРНАЛ ---------- */
+function logFiltered(){
+  const f=logFrom.value,t=logTo.value,ty=logType.value,q=(logSearch.value||'').toLowerCase();
+  let ops=DB.ops.slice().reverse();
+  ops=ops.filter(o=>(!f||o.date>=f)&&(!t||o.date<=t)&&(!ty||o.type===ty));
+  if(q)ops=ops.filter(o=>{const it=DB.items[o.key];return ((it?nameOf(it):'')+' '+(o.client||'')+' '+(o.comment||'')).toLowerCase().includes(q);});
+  return ops;
+}
+function renderLog(){
+  const ops=logFiltered();
+  let html='<tr><th>Дата</th><th>Операція</th><th>Волокно</th><th class="num">Тюків</th><th class="num">кг</th><th>Ваги тюків</th><th>Клієнт</th><th>Коментар</th><th></th></tr>';
+  let ti=0,to=0,ki=0,ko=0,prevB=null,zeb=false;
+  ops.forEach(o=>{
+    const it=DB.items[o.key];
+    if(o.type==='in'){ti+=o.count;ki+=o.kg;}else{to+=o.count;ko+=o.kg;}
+    const ws=(o.weights||[]).join(', ');
+    const bkey=(o.batch||((o.ts||'').slice(0,16))||o.id)+'|'+o.type;
+    if(bkey!==prevB){zeb=!zeb;prevB=bkey;}
+    html+=`<tr class="${zeb?'zA':'zB'}"><td style="white-space:nowrap">${o.date} <span class="balelist">${(o.ts||'').slice(11,16)}</span></td><td><span class="badge ${o.adj?'b-adj':(o.type==='in'?'b-in':'b-out')}">${o.adj?(o.type==='in'?'Ревізія +':'Ревізія −'):(o.type==='in'?'Прихід':'Списання')}</span></td><td>${it?nameOf(it):o.key}</td><td class="num">${o.count}</td><td class="num">${fmt(o.kg)}</td><td><span class="balelist" title="${ws}">${ws.length>40?ws.slice(0,40)+'…':ws}</span></td><td>${o.client||''}</td><td>${o.comment||''}</td><td><button class="del" title="Видалити операцію (поверне залишок)" onclick="delOp(${o.id})">✕</button></td></tr>`;
+  });
+  if(!ops.length)html+='<tr><td colspan="9" style="text-align:center;color:var(--mut)">Операцій немає</td></tr>';
+  else{
+    if(ti)html+=`<tr class="grand"><td colspan="3">РАЗОМ ПРИХІД</td><td class="num">${fmt(ti)}</td><td class="num">${fmt(+ki.toFixed(1))}</td><td colspan="4"></td></tr>`;
+    if(to)html+=`<tr class="grand"><td colspan="3">РАЗОМ СПИСАНО</td><td class="num">${fmt(to)}</td><td class="num">${fmt(+ko.toFixed(1))}</td><td colspan="4"></td></tr>`;
+  }
+  document.getElementById('logTable').innerHTML=html;
+  document.getElementById('logTotals').innerHTML=`Прихід: <b style="color:var(--grn)">${fmt(ti)} тюків / ${fmt(+ki.toFixed(1))} кг</b> &nbsp;·&nbsp; Списано: <b style="color:var(--red)">${fmt(to)} тюків / ${fmt(+ko.toFixed(1))} кг</b> &nbsp;·&nbsp; операцій: ${ops.length}`;
+}
+function delOp(id){
+  const o=DB.ops.find(x=>x.id===id);
+  if(!o)return;
+  if(!confirm('Видалити операцію? Залишок буде відкориговано назад.'))return;
+  const it=DB.items[o.key];
+  if(it){
+    if(o.type==='out')it.bales.push(...(o.weights||[]));
+    else (o.weights||[]).forEach(w=>{const i=it.bales.indexOf(w);if(i>=0)it.bales.splice(i,1);});
+  }
+  DB.ops=DB.ops.filter(x=>x.id!==id);
+  save();renderLog();
+}
+
+/* ---------- ЗВІТ ---------- */
+function repQuick(p,btn){
+  btn.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('act'));
+  btn.classList.add('act');
+  const d=new Date();const iso=x=>ldate(x);
+  if(p==='today'){repFrom.value=today();repTo.value=today();}
+  if(p==='yest'){d.setDate(d.getDate()-1);repFrom.value=iso(d);repTo.value=iso(d);}
+  if(p==='week'){const e=today();d.setDate(d.getDate()-6);repFrom.value=iso(d);repTo.value=e;}
+  if(p==='month'){repFrom.value=today().slice(0,8)+'01';repTo.value=today();}
+  renderRep();
+}
+function renderRep(){
+  const f=repFrom.value||today(),t=repTo.value||today();
+  const ops=DB.ops.filter(o=>o.type==='out'&&o.date>=f&&o.date<=t);
+  const grp={};
+  ops.forEach(o=>{
+    if(!grp[o.key])grp[o.key]={count:0,kg:0,clients:new Set()};
+    grp[o.key].count+=o.count;grp[o.key].kg+=o.kg;
+    if(o.client)grp[o.key].clients.add(o.client);
+  });
+  let html=`<div class="sub">Списання за період <b>${f}</b> — <b>${t}</b></div>`;
+  if(!ops.length){html+='<p style="color:var(--mut)">За цей період списань не було.</p>';}
+  else{
+    let tc=0,tk=0;
+    html+='<table><tr><th>Волокно</th><th class="num">Тюків</th><th class="num">кг</th><th>Клієнти</th></tr>';
+    Object.entries(grp).forEach(([k,v])=>{
+      const it=DB.items[k];tc+=v.count;tk+=v.kg;
+      html+=`<tr><td>${it?nameOf(it):k}</td><td class="num">${fmt(v.count)}</td><td class="num">${fmt(+v.kg.toFixed(1))}</td><td>${[...v.clients].join(', ')}</td></tr>`;
+    });
+    html+=`<tr class="grand"><td>ВСЬОГО СПИСАНО</td><td class="num">${fmt(tc)}</td><td class="num">${fmt(+tk.toFixed(1))}</td><td>${ops.length} операцій</td></tr></table>`;
+  }
+  document.getElementById('repBody').innerHTML=html;
+}
+
+
+
+/* ---------- РЕВІЗІЯ ---------- */
+let _sugRev=[],_revIdx=-1;
+function prepRev(){
+  if(!document.getElementById('revDate').value)document.getElementById('revDate').value=today();
+  const sel=document.getElementById('revItem');
+  sel.innerHTML='<option value="">— оберіть позицію —</option>'+itemsSorted().map(it=>`<option value="${keyOf(it)}">${nameOf(it)} (${it.bales.length} тюків, ${fmt(kgOf(it))} кг)</option>`).join('');
+  revSuggest();revInfoUpd();
+}
+function revSuggest(keep){
+  const box=document.getElementById('revSugg');if(!box)return;
+  if(!keep){_revIdx=-1;_sugRev=matchItems((document.getElementById('revSearch')||{}).value,false);}
+  box.innerHTML=_sugRev.map((it,i)=>`<div class="sug${i===_revIdx?' act':''}" onclick="pickRev(${i})">${nameOf(it)} <span class="sub2">· ${it.bales.length} тюків · ${fmt(kgOf(it))} кг</span></div>`).join('');
+}
+function pickRev(i){
+  const it=_sugRev[i];if(!it)return;
+  document.getElementById('revItem').value=keyOf(it);
+  document.getElementById('revSearch').value=nameOf(it);
+  document.getElementById('revSugg').innerHTML='';
+  revInfoUpd();
+  const r=document.getElementById('revWeights');if(r&&r.focus)r.focus();
+}
+function sugKeyRev(e){
+  if(!_sugRev.length)return;
+  if(e.key==='ArrowDown'){e.preventDefault();_revIdx=Math.min(_revIdx+1,_sugRev.length-1);revSuggest(true);}
+  else if(e.key==='ArrowUp'){e.preventDefault();_revIdx=Math.max(_revIdx-1,0);revSuggest(true);}
+  else if(e.key==='Enter'){e.preventDefault();pickRev(_revIdx<0?0:_revIdx);}
+  else if(e.key==='Escape'){document.getElementById('revSugg').innerHTML='';}
+}
+function revInfoUpd(){
+  const k=document.getElementById('revItem').value, line=document.getElementById('revInfoLine');
+  if(!line)return;
+  if(!k){line.textContent='';return;}
+  const it=DB.items[k];
+  line.textContent=`Облік: ${it.bales.length} тюків, ${fmt(kgOf(it))} кг (${it.bales.join(', ')||'—'})`;
+}
+let revBatch=[];
+function addRevLine(){
+  const msg=document.getElementById('revMsg');
+  const k=document.getElementById('revItem').value;
+  if(!k){msg.className='msg err';msg.textContent='Оберіть позицію.';return;}
+  if(revBatch.some(x=>x.key===k)){msg.className='msg err';msg.textContent='Ця позиція вже у списку — видаліть рядок, щоб змінити.';return;}
+  const txt=(document.getElementById('revWeights').value||'').trim();
+  let newW=[];
+  if(txt){
+    newW=txt.split(/[\s,;]+/).map(x=>parseFloat(x.replace(',','.'))).filter(x=>x>0);
+    if(!newW.length){msg.className='msg err';msg.textContent='Не вдалося розпізнати ваги — введіть числа через пробіл.';return;}
+  }
+  revBatch.push({key:k,weights:newW});
+  msg.className='msg';msg.textContent='';
+  document.getElementById('revWeights').value='';
+  document.getElementById('revItem').value='';
+  const s=document.getElementById('revSearch');if(s){s.value='';if(s.focus)s.focus();}
+  document.getElementById('revSugg').innerHTML='';
+  revInfoUpd();renderRevBatch();
+}
+function renderRevBatch(){
+  const box=document.getElementById('revBatchBox');if(!box)return;
+  if(!revBatch.length){box.innerHTML='';return;}
+  box.innerHTML='<b style="font-size:13px">До вирівнювання:</b>'+revBatch.map((x,i)=>{
+    const it=DB.items[x.key];
+    const nk=+x.weights.reduce((s,v)=>s+v,0).toFixed(1);
+    return `<div class="bline">${it?nameOf(it):x.key} — було <b>${it?it.bales.length:'?'} тюків</b> → факт <b>${x.weights.length} тюків</b> (${fmt(nk)} кг) <button class="del" onclick="revBatch.splice(${i},1);renderRevBatch()">✕</button></div>`;
+  }).join('');
+}
+function doRev(){
+  const msg=document.getElementById('revMsg');
+  const date=document.getElementById('revDate').value;
+  if(document.getElementById('revItem').value&&(document.getElementById('revWeights').value||'').trim()){
+    addRevLine();
+    if((document.getElementById('revMsg').className||'').includes('err'))return;
+  }
+  if(!revBatch.length){msg.className='msg err';msg.textContent='Додайте хоча б одну позицію.';return;}
+  if(!date){msg.className='msg err';msg.textContent='Вкажіть дату.';return;}
+  const cm=document.getElementById('revComment').value.trim();
+  const bid=newId();
+  let n=0;
+  revBatch.forEach(x=>{
+    const it=DB.items[x.key];if(!it)return;
+    const oldW=it.bales.slice(),newW=x.weights;
+    if(oldW.length===newW.length&&oldW.join()===newW.join())return;
+    if(oldW.length)DB.ops.push({id:newId(),type:'out',adj:true,batch:bid,date,key:x.key,count:oldW.length,kg:+oldW.reduce((s,v)=>s+v,0).toFixed(1),weights:oldW,client:'',comment:'Ревізія: зняття облікового залишку'+(cm?' · '+cm:''),ts:lstamp(new Date())});
+    it.bales=newW.slice();
+    if(newW.length)DB.ops.push({id:newId(),type:'in',adj:true,batch:bid,date,key:x.key,count:newW.length,kg:+newW.reduce((s,v)=>s+v,0).toFixed(1),weights:newW,client:'',comment:'Ревізія: фактичний залишок'+(cm?' · '+cm:''),ts:lstamp(new Date())});
+    n++;
+  });
+  const total=revBatch.length;
+  save();
+  revBatch=[];renderRevBatch();
+  msg.className='msg ok';msg.textContent=`✔ Ревізію проведено: скориговано ${n} позиц.${total-n?' ('+(total-n)+' без розбіжностей)':''}.`;
+  document.getElementById('revComment').value='';
+  prepRev();
+}
+/* ---------- ДАШБОРД ---------- */
+const DASH_KEY=LS_KEY+'_dash';
+let DASH={period:30,hide:[],unit:'kg',scope:'main',from:'',to:''};
+try{const _dd=JSON.parse(localStorage.getItem(DASH_KEY));if(_dd&&_dd.period)DASH=Object.assign({unit:'kg',scope:'main',from:'',to:'',hide:[]},_dd);}catch(e){}
+function saveDash(){localStorage.setItem(DASH_KEY,JSON.stringify(DASH));}
+function toggleDashCtl(){DASH.ctlOpen=!DASH.ctlOpen;saveDash();applyDashCtl();}
+function applyDashCtl(){
+  const b=document.getElementById('dashCtl'),t=document.getElementById('dashCtlT');
+  if(!b)return;
+  b.style.display=DASH.ctlOpen?'':'none';
+  if(t)t.textContent=DASH.ctlOpen?'⚙ Сховати налаштування ▴':'⚙ Налаштування ▾';
+}
+function setDashP(p,btn){
+  DASH.period=p;DASH.from='';DASH.to='';saveDash();
+  const df=document.getElementById('dashFrom'),dt=document.getElementById('dashTo');
+  if(df)df.value='';if(dt)dt.value='';
+  renderDash();
+}
+function setDashDates(){
+  const df=(document.getElementById('dashFrom')||{}).value,dt=(document.getElementById('dashTo')||{}).value;
+  if(df&&dt){DASH.from=df;DASH.to=dt;saveDash();renderDash();}
+}
+function setDashU(u,btn){DASH.unit=u;saveDash();renderDash();}
+function setDashScope(s,btn){DASH.scope=s;saveDash();renderDash();}
+function dashRange(){
+  if(DASH.from&&DASH.to)return [DASH.from,DASH.to];
+  const t=today();const d0=new Date();d0.setDate(d0.getDate()-(DASH.period-1));
+  return [ldate(d0),t];
+}
+function syncDashCtl(){
+  const custom=!!(DASH.from&&DASH.to);
+  document.querySelectorAll('#dashChips .chip').forEach(c=>c.classList.toggle('act',!custom&&+c.dataset.p===DASH.period));
+  document.querySelectorAll('#dashUnits .chip').forEach(c=>c.classList.toggle('act',c.dataset.u===DASH.unit));
+  document.querySelectorAll('#dashScope .chip').forEach(c=>c.classList.toggle('act',c.dataset.s===(DASH.scope||'main')));
+  const df=document.getElementById('dashFrom'),dt=document.getElementById('dashTo');
+  if(df&&custom)df.value=DASH.from;
+  if(dt&&custom)dt.value=DASH.to;
+}
+function toggleDashMenu(){
+  const m=document.getElementById('dashMenu');
+  if(m.style.display==='block'){m.style.display='none';return;}
+  m.innerHTML='<b style="font-size:12px;color:var(--mut)">Показувати віджети:</b>'+Object.entries(DASH_W).map(([id,l])=>`<label><input type="checkbox" ${DASH.hide.includes(id)?'':'checked'} onchange="toggleDashW('${id}')"> ${l}</label>`).join('');
+  m.style.display='block';
+}
+function toggleDashW(id){
+  if(DASH.hide.includes(id))DASH.hide=DASH.hide.filter(x=>x!==id);
+  else DASH.hide.push(id);
+  saveDash();renderDash();
+}
+function hbar(label,val,max,suf){
+  const p=max>0?Math.max(2,Math.round(val/max*100)):0;
+  return `<div class="hb"><div class="hb-l" title="${label}">${label}</div><div class="hb-t"><div class="hb-f" style="width:${p}%"></div></div><div class="hb-v">${fmt(r1(val))}${suf||''}</div></div>`;
+}
+function dashDays(f,t){
+  const days=[];
+  const d=new Date(t+'T12:00:00');
+  while(days.length<92){
+    const s=ldate(d);
+    if(s<f)break;
+    days.unshift(s);
+    d.setDate(d.getDate()-1);
+  }
+  return days;
+}
+
+const DASH_W={kpi:'Ключові показники',name:'Залишки по волокнах',pie:'Структура залишків (діаграма)',days:'Динаміка по днях',clients:'Топ клієнтів'};
+function dashU(){const U=DASH.unit||'kg';return {U,lab:U==='kg'?'кг':'тюк',opV:o=>U==='kg'?o.kg:o.count,stV:it=>U==='kg'?kgOf(it):it.bales.length};}
+function scopeStock(it){
+  const sc=DASH.scope||'main';
+  if((DASH.unit||'kg')==='cnt')return it.bales.length;
+  if(sc==='ext')return extOf(it);
+  if(sc==='both')return kgOf(it)+extOf(it);
+  return kgOf(it);
+}
+function scopeLbl(){const sc=DASH.scope||'main';return sc==='ext'?'Склад Ф':sc==='both'?'обидва склади':'основний склад';}
+function dashData(){
+  const [fd,td]=dashRange();
+  const opsP=DB.ops.filter(o=>o.date>=fd&&o.date<=td);
+  const {lab,opV,stV}=dashU();
+  let sc=0,sk=0,se=0;
+  Object.values(DB.items).forEach(it=>{sc+=it.bales.length;sk+=kgOf(it);se+=extOf(it);});
+  let pi=0,po=0;const cls=new Set();
+  opsP.forEach(o=>{if(o.type==='in')pi+=opV(o);else{po+=opV(o);if(o.client)cls.add(o.client);}});
+  const byName={};
+  itemsSorted().forEach(it=>{const v=scopeStock(it);if(v)byName[nameOf(it)]=v;});
+  const days=dashDays(fd,td);
+  const outs=days.map(d=>opsP.filter(o=>o.type==='out'&&o.date===d).reduce((s,o)=>s+opV(o),0));
+  const ins=days.map(d=>opsP.filter(o=>o.type==='in'&&o.date===d).reduce((s,o)=>s+opV(o),0));
+  const byCl={};
+  opsP.forEach(o=>{if(o.type!=='out')return;const c=o.client||'— без клієнта —';byCl[c]=(byCl[c]||0)+opV(o);});
+  return {fd,td,lab,sc,sk,se,pi,po,cls,byName,days,outs,ins,byCl,scopeLbl:scopeLbl()};
+}
+function renderDash(){
+  const body=document.getElementById('dashBody');if(!body)return;
+  syncDashCtl();applyDashCtl();
+  const D=dashData();
+  const show=id=>!DASH.hide.includes(id);
+  let html='';
+  if(show('kpi')){
+    html+=`<div class="dw"><h4>Ключові показники · ${D.fd} — ${D.td}</h4><div class="stats" style="margin:0">
+      <div class="stat"><div class="v">${fmt(D.sc)}</div><div class="l">тюків на складі</div></div>
+      <div class="stat"><div class="v">${fmt(Math.round(D.sk))}</div><div class="l">кг тут</div></div>
+      <div class="stat"><div class="v">${fmt(Math.round(D.se))}</div><div class="l">кг на Складі Ф</div></div>
+      <div class="stat"><div class="v" style="color:var(--acc)">${fmt(Math.round(D.sk+D.se))}</div><div class="l">РАЗОМ, кг</div></div>
+      <div class="stat"><div class="v" style="color:var(--grn)">${fmt(r1(D.pi))}</div><div class="l">прихід, ${D.lab}</div></div>
+      <div class="stat"><div class="v" style="color:var(--red)">${fmt(r1(D.po))}</div><div class="l">списано, ${D.lab}</div></div>
+      <div class="stat"><div class="v">${D.cls.size}</div><div class="l">клієнтів</div></div>
+    </div></div>`;
+  }
+  let grid='';
+  const bars=(obj,n)=>{const arr=Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n);const mx=arr.length?arr[0][1]:0;return arr.map(([l,v])=>hbar(l,v,mx)).join('')||'<div class="sub">немає даних</div>';};
+  if(show('name'))grid+=`<div class="dw"><h4>Залишки по волокнах — ${D.scopeLbl}</h4>${bars(D.byName,12)}</div>`;
+  if(show('pie')){
+    const arr=Object.entries(D.byName).sort((a,b)=>b[1]-a[1]);
+    const top=arr.slice(0,6);
+    const rest=arr.slice(6).reduce((s,x)=>s+x[1],0);
+    if(rest>0)top.push(['Інші',rest]);
+    const tot=top.reduce((s,x)=>s+x[1],0);
+    if(tot>0){
+      const colors=['#7c3aed','#16a34a','#f59e0b','#dc2626','#2563eb','#0891b2','#94a3b8'];
+      let acc=0;
+      const segs=top.map(([l,v],i)=>{const a0=acc/tot*360;acc+=v;return colors[i%7]+' '+a0.toFixed(1)+'deg '+(acc/tot*360).toFixed(1)+'deg';});
+      grid+=`<div class="dw"><h4>Структура залишків, ${D.lab}</h4>
+        <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+        <div class="pie" style="background:conic-gradient(${segs.join(',')})"></div>
+        <div style="flex:1;min-width:160px">${top.map(([l,v],i)=>`<div class="pleg"><span class="dot" style="background:${colors[i%7]}"></span><span class="pleg-l" title="${l}">${l}</span><b>${(v/tot*100).toFixed(1)}%</b> <span class="sub2">${fmt(r1(v))}</span></div>`).join('')}</div>
+        </div></div>`;
+    }
+  }
+  if(show('days')){
+    const mo=Math.max(...D.outs,1),mi=Math.max(...D.ins,1);
+    grid+=`<div class="dw"><h4>Списання по днях, ${D.lab} · макс ${fmt(Math.round(Math.max(...D.outs,0)))}</h4>
+      <div class="cols">${D.days.map((d,i)=>`<div class="col" title="${d}: ${fmt(Math.round(D.outs[i]))} ${D.lab}" style="height:${Math.max(2,Math.round(D.outs[i]/mo*100))}%"></div>`).join('')}</div>
+      <div class="sub" style="display:flex;justify-content:space-between;margin:0"><span>${D.days[0]||''}</span><span>${D.days[D.days.length-1]||''}</span></div>
+      <h4 style="margin-top:12px">Прихід по днях, ${D.lab} · макс ${fmt(Math.round(Math.max(...D.ins,0)))}</h4>
+      <div class="cols">${D.days.map((d,i)=>`<div class="col colin" title="${d}: ${fmt(Math.round(D.ins[i]))} ${D.lab}" style="height:${Math.max(2,Math.round(D.ins[i]/mi*100))}%"></div>`).join('')}</div>
+      <div class="sub" style="display:flex;justify-content:space-between;margin:0"><span>${D.days[0]||''}</span><span>${D.days[D.days.length-1]||''}</span></div></div>`;
+  }
+  if(show('clients'))grid+=`<div class="dw"><h4>Топ клієнтів за період, ${D.lab}</h4>${bars(D.byCl,8)}</div>`;
+  html+=grid?`<div class="dash-grid">${grid}</div>`:'';
+  body.innerHTML=html||'<div class="sub">Усі віджети приховано — увімкніть потрібні в меню «⚙ Віджети»</div>';
+}
+function dlDash(){
+  const D=dashData();
+  const aoa=repHead('ДАШБОРД — ВОЛОКНО','Період: '+D.fd+' — '+D.td+' · одиниці: '+D.lab);
+  aoa.push(['█ КЛЮЧОВІ ПОКАЗНИКИ']);
+  aoa.push(['Тюків на складі',D.sc]);
+  aoa.push(['кг на складі',r1(D.sk)]);
+  aoa.push(['Прихід за період, '+D.lab,r1(D.pi)]);
+  aoa.push(['Списано за період, '+D.lab,r1(D.po)]);
+  aoa.push(['Клієнтів за період',D.cls.size]);
+  aoa.push([]);
+  const dump=(title,obj)=>{aoa.push(['█ '+title]);Object.entries(obj).sort((a,b)=>b[1]-a[1]).forEach(([l,v])=>aoa.push([l,r1(v)]));aoa.push([]);};
+  dump('ЗАЛИШКИ ПО ВОЛОКНАХ, '+D.lab,D.byName);
+  aoa.push(['█ ДИНАМІКА ПО ДНЯХ, '+D.lab]);
+  aoa.push(['Дата','Прихід','Списано']);
+  D.days.forEach((d,i)=>aoa.push([d,r1(D.ins[i]),r1(D.outs[i])]));
+  aoa.push([]);
+  dump('ТОП КЛІЄНТІВ, '+D.lab,D.byCl);
+  aoaSave(aoa,[38,16,16],'Дашборд','Волокно_Дашборд_'+D.fd+'_по_'+D.td);
+}
+
+/* ---------- ЗВІТИ EXCEL ---------- */
+const r1=n=>+(+n).toFixed(1);
+function aoaSave(aoa,widths,sheet,fname){
+  if(typeof XLSX==='undefined'){alert('Немає інтернету — бібліотека Excel не завантажилась.');return;}
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  if(widths)ws['!cols']=widths.map(w=>({wch:w}));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,sheet);
+  XLSX.writeFile(wb,fname+'.xlsx');
+}
+function repHead(title,sub){return [[title],[sub],['Сформовано: '+new Date().toLocaleString('uk-UA')],[]];}
+function toggleDl(){
+  const b=document.getElementById('dlBox'),t=document.getElementById('dlToggle');
+  const open=b.style.display==='none';
+  b.style.display=open?'':'none';
+  if(t)t.textContent=open?'📥 Сховати звіти ▴':'📥 Скачати звіти ▾';
+}
+function dlMove(){
+  const fd=repFrom.value||today(),td=repTo.value||today();
+  const list=[];
+  Object.entries(DB.items).forEach(([k,it])=>{
+    let endC=it.bales.length,endK=kgOf(it),inC=0,outC=0,inK=0,outK=0;
+    DB.ops.forEach(o=>{
+      if(o.key!==k)return;
+      if(o.date>td){if(o.type==='in'){endC-=o.count;endK-=o.kg;}else{endC+=o.count;endK+=o.kg;}}
+      else if(o.date>=fd){if(o.type==='in'){inC+=o.count;inK+=o.kg;}else{outC+=o.count;outK+=o.kg;}}
+    });
+    const startC=endC-inC+outC,startK=endK-inK+outK;
+    if(!startC&&!inC&&!outC&&!endC)return;
+    list.push({it,startC,inC,outC,endC,startK,inK,outK,endK});
+  });
+  if(!list.length){alert('Немає даних за період.');return;}
+  list.sort((a,b)=>nameOf(a.it).localeCompare(nameOf(b.it),'uk'));
+  const aoa=repHead('РУХ ВОЛОКНА ЗА ПЕРІОД','Період: '+fd+' — '+td);
+  aoa.push(['Волокно','Початок, тюк','Прихід, тюк','Списано, тюк','Кінець, тюк','Початок, кг','Прихід, кг','Списано, кг','Кінець, кг']);
+  const T={sc:0,pc:0,vc:0,ec:0,sk:0,pk:0,vk:0,ek:0};
+  list.forEach(x=>{
+    aoa.push([nameOf(x.it),x.startC,x.inC,x.outC,x.endC,r1(x.startK),r1(x.inK),r1(x.outK),r1(x.endK)]);
+    T.sc+=x.startC;T.pc+=x.inC;T.vc+=x.outC;T.ec+=x.endC;T.sk+=x.startK;T.pk+=x.inK;T.vk+=x.outK;T.ek+=x.endK;
+  });
+  aoa.push([]);
+  aoa.push(['ВСЬОГО',T.sc,T.pc,T.vc,T.ec,r1(T.sk),r1(T.pk),r1(T.vk),r1(T.ek)]);
+  aoaSave(aoa,[34,13,12,13,12,13,12,13,12],'Рух','Волокно_Рух_'+fd+'_по_'+td);
+}
+function dlClients(){
+  const fd=repFrom.value||today(),td=repTo.value||today();
+  const ops=DB.ops.filter(o=>o.type==='out'&&o.date>=fd&&o.date<=td);
+  if(!ops.length){alert('За цей період списань немає.');return;}
+  const g={};
+  ops.forEach(o=>{
+    const c=o.client||'— без клієнта —';const it=DB.items[o.key];const n=it?nameOf(it):o.key;
+    const kk=c+'||'+n;
+    if(!g[kk])g[kk]={c,n,cn:0,k:0};
+    g[kk].cn+=o.count;g[kk].k+=o.kg;
+  });
+  const list=Object.values(g).sort((a,b)=>a.c.localeCompare(b.c,'uk')||a.n.localeCompare(b.n,'uk'));
+  const aoa=repHead('СПИСАННЯ ПО КЛІЄНТАХ — ВОЛОКНО','Період: '+fd+' — '+td);
+  aoa.push(['Клієнт / Волокно','Тюків','кг']);
+  let cur=null,cs=null;const G={cn:0,k:0};
+  const flush=()=>{if(cs){aoa.push(['Разом: '+cur,cs.cn,r1(cs.k)]);aoa.push([]);}};
+  list.forEach(x=>{
+    if(x.c!==cur){flush();cur=x.c;cs={cn:0,k:0};aoa.push(['█ '+x.c]);}
+    aoa.push(['    '+x.n,x.cn,r1(x.k)]);
+    cs.cn+=x.cn;cs.k+=x.k;G.cn+=x.cn;G.k+=x.k;
+  });
+  flush();
+  aoa.push(['ВСЬОГО',G.cn,r1(G.k)]);
+  aoaSave(aoa,[44,10,12],'По клієнтах','Волокно_Клієнти_'+fd+'_по_'+td);
+}
+function dlSnapshot(){
+  const d=((document.getElementById('snapDate')||{}).value)||today();
+  const list=[];
+  Object.entries(DB.items).forEach(([k,it])=>{
+    let c=it.bales.length,kgv=kgOf(it);
+    DB.ops.forEach(o=>{if(o.key===k&&o.date>d){if(o.type==='in'){c-=o.count;kgv-=o.kg;}else{c+=o.count;kgv+=o.kg;}}});
+    if(c)list.push({it,c,kgv});
+  });
+  if(!list.length){alert('На цю дату залишків немає.');return;}
+  list.sort((a,b)=>nameOf(a.it).localeCompare(nameOf(b.it),'uk'));
+  const aoa=repHead('ЗАЛИШКИ НА СКЛАДІ — ВОЛОКНО','Станом на: '+d);
+  aoa.push(['Волокно','Тюків','кг']);
+  let tc=0,tk=0;
+  list.forEach(x=>{aoa.push([nameOf(x.it),x.c,r1(x.kgv)]);tc+=x.c;tk+=x.kgv;});
+  aoa.push([]);
+  aoa.push(['ВСЬОГО',tc,r1(tk)]);
+  aoaSave(aoa,[36,10,12],'Залишки','Волокно_Залишки_на_'+d);
+}
+function dlLog(){
+  const ops=logFiltered();
+  if(!ops.length){alert('Немає операцій за вибраними фільтрами.');return;}
+  const aoa=repHead('ЖУРНАЛ ОПЕРАЦІЙ — ВОЛОКНО','Період: '+(logFrom.value||'з початку')+' — '+(logTo.value||'до сьогодні'));
+  aoa.push(['Час','Операція','Волокно','Тюків','кг','Ваги тюків','Клієнт','Коментар']);
+  let curD=null,D=null,Ti=0,To=0,Ki=0,Ko=0;
+  const dayRow=()=>{
+    if(!D)return;
+    if(D.ti)aoa.push(['','Разом за день — прихід','',D.ti,r1(D.ki)]);
+    if(D.to)aoa.push(['','Разом за день — списано','',D.to,r1(D.ko)]);
+    aoa.push([]);
+  };
+  ops.forEach(o=>{
+    if(o.date!==curD){dayRow();curD=o.date;D={ti:0,to:0,ki:0,ko:0};aoa.push(['█ '+o.date]);}
+    const it=DB.items[o.key];
+    if(o.type==='in'){D.ti+=o.count;D.ki+=o.kg;Ti+=o.count;Ki+=o.kg;}
+    else{D.to+=o.count;D.ko+=o.kg;To+=o.count;Ko+=o.kg;}
+    aoa.push([(o.ts||'').slice(11,16),(o.adj?'Ревізія · ':'')+(o.type==='in'?'Прихід':'Списання'),it?nameOf(it):o.key,o.count,o.kg,(o.weights||[]).join(', '),o.client||'',o.comment||'']);
+  });
+  dayRow();
+  aoa.push(['','ВСЬОГО ПРИХІД','',Ti,r1(Ki)]);
+  aoa.push(['','ВСЬОГО СПИСАНО','',To,r1(Ko)]);
+  aoaSave(aoa,[8,24,32,9,11,38,20,24],'Журнал','Волокно_Журнал_'+today());
+}
+
+/* ---------- ЕКСПОРТ / БЕКАП ---------- */
+function buildWB(){
+  const wb=XLSX.utils.book_new();
+  const s1=itemsSorted().map(it=>({'Назва':it.name,'Країна':it.country||'','Тюків (шт)':it.bales.length,'Вага (кг)':kgOf(it),'Ваги тюків':it.bales.join(', ')}));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(s1),'Залишки');
+  const s2=DB.ops.map(o=>{const it=DB.items[o.key];return{'Дата':o.date,'Операція':(o.adj?'Ревізія · ':'')+(o.type==='in'?'Прихід':'Списання'),'Волокно':it?nameOf(it):o.key,'Тюків':o.count,'кг':o.kg,'Ваги':(o.weights||[]).join(', '),'Клієнт':o.client||'','Коментар':o.comment||''};});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(s2),'Журнал');
+  return wb;
+}
+function exportXLSX(){
+  if(typeof XLSX==='undefined'){alert('Немає інтернету — бібліотека Excel не завантажилась.');return;}
+  XLSX.writeFile(buildWB(),'Склад_волокно_'+today()+'.xlsx');
+}
+function backup(){
+  const a=document.createElement('a');
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(DB));
+  a.download='volokno_backup_'+today()+'.json';a.click();
+}
+function restore(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{try{const d=JSON.parse(e.target.result);if(!d.items)throw 0;DB=d;save();showTab('stock');alert('Дані відновлено ✔');}catch(x){alert('Невірний файл резервної копії');}};
+  r.readAsText(f);inp.value='';
+}
+
+load();
+applyUI();
+renderStock();
+srvPull(true);
+let _rzT;window.addEventListener('resize',()=>{clearTimeout(_rzT);_rzT=setTimeout(()=>{if(document.getElementById('tab-stock').style.display!=='none')renderStock();},200);});
+document.getElementById('inDate').value=today();
+document.getElementById('outDate').value=today();
+repFrom.value=today();repTo.value=today();
+const _sd=document.getElementById('snapDate');if(_sd)_sd.value=today();
+</script>
+<div id="uiModal" class="modal"><div class="modal-box">
+<div class="modal-head"><b>🎨 Вигляд програми</b><button class="mclose" onclick="closeUI()">✕</button></div>
+<div class="sub" style="margin-bottom:8px">Налаштування вигляду зберігаються на цьому пристрої.</div>
+<div class="row">
+<div><label>Основний колір</label><input type="color" id="uiAcc"></div>
+<div><label>Фон сторінки</label><input type="color" id="uiBg"></div>
+<div><label>Фон карток</label><input type="color" id="uiCard"></div>
+<div><label>Колір тексту</label><input type="color" id="uiTxt"></div>
+</div>
+<div class="row">
+<div><label>Шрифт</label><select id="uiFont">
+<option value="">Стандартний</option>
+<option value="Georgia, serif">Georgia</option>
+<option value="'Times New Roman', serif">Times New Roman</option>
+<option value="Verdana, sans-serif">Verdana</option>
+<option value="Tahoma, sans-serif">Tahoma</option>
+<option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+<option value="'Courier New', monospace">Courier New</option>
+<option value="system-ui, sans-serif">Системний</option>
+</select></div>
+<div style="flex:0;min-width:160px"><label>Розмір тексту, px</label><input type="number" id="uiFs" min="12" max="20" step="1"></div>
+</div>
+<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+<button class="btn grn" onclick="saveUI()">💾 Застосувати</button>
+<button class="btn ghost" onclick="closeUI()">Закрити</button>
+<button class="btn ghost" style="margin-left:auto" onclick="resetUI()">↺ Скинути до стандартного</button>
+</div>
+</div></div>
+<div id="extfImpModal" class="modal"><div class="modal-box" style="max-width:720px">
+<div class="modal-head"><b>📥 Імпорт Складу Ф з Excel</b><button class="mclose" onclick="closeExtfImp()">✕</button></div>
+<div id="extfImpBody"></div>
+</div></div>
+<div id="itemModal" class="modal"><div class="modal-box"><div class="modal-head"><b id="imTitle"></b><button class="mclose" onclick="closeCard()">✕</button></div><div id="imBody"></div></div></div>
+</body>
+</html>
